@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>على بصيرة AI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- Portable single file: no external images. To host anywhere, wrap in <html><head>…</head><body>…</body></html> (see index.html build). -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2313302F'/%3E%3Cg transform='translate(32 32) scale(.82) translate(-32 -32)'%3E%3Crect x='14' y='14' width='36' height='36' rx='3' fill='%23D6A44C'/%3E%3Crect x='14' y='14' width='36' height='36' rx='3' fill='%23D6A44C' transform='rotate(45 32 32)'/%3E%3Ccircle cx='32' cy='32' r='15' fill='%2313302F'/%3E%3Cpath d='M21 31q5.5-2 11 1q5.5-3 11-1v11q-5.5-2-11 1q-5.5-3-11-1z' fill='none' stroke='%23D6A44C' stroke-width='2'/%3E%3Ccircle cx='32' cy='24.5' r='2.4' fill='%23D6A44C'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@500;700&display=swap">
+<style>
+/* Layout: a quiet manuscript page — sticky ink header, narrow reading column, sources always set apart in framed "نص" blocks */
+:root{
+  --paper:#F2F4F1; --sheet:#FFFFFF; --ink:#13302F; --ink-2:#4A5F5D; --line:#D5DDD9;
+  --accent:#9A6A1B; --accent-soft:#F4EAD6; --sage:#2F6B5E; --sage-soft:#E1EEE9;
+  --warn:#8A4B12; --warn-soft:#FBEBDD; --crit:#9B2C2C; --crit-soft:#F8E3E1;
+  --muted-soft:#E9EDEB; --header:#13302F; --header-fg:#EEF3F1;
+  --f-display:"Reem Kufi","IBM Plex Sans Arabic",sans-serif;
+  --f-body:"Amiri","Noto Naskh Arabic","Times New Roman",serif;
+  --f-ui:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+  --f-quran:"Amiri Quran","Amiri",serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0F1A1A; --sheet:#152323; --ink:#E4ECE9; --ink-2:#A3B5B1; --line:#2B3E3D;
+  --accent:#D9A94F; --accent-soft:#3A2E17; --sage:#7CC3AE; --sage-soft:#1C3530;
+  --warn:#E7A866; --warn-soft:#3A2614; --crit:#EE8E86; --crit-soft:#3B1D1C;
+  --muted-soft:#1D2C2B; --header:#0A1414; --header-fg:#E4ECE9; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F1A1A; --sheet:#152323; --ink:#E4ECE9; --ink-2:#A3B5B1; --line:#2B3E3D;
+  --accent:#D9A94F; --accent-soft:#3A2E17; --sage:#7CC3AE; --sage-soft:#1C3530;
+  --warn:#E7A866; --warn-soft:#3A2614; --crit:#EE8E86; --crit-soft:#3B1D1C;
+  --muted-soft:#1D2C2B; --header:#0A1414; --header-fg:#E4ECE9; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.7}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--header)}
+a{color:var(--sage)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;text-wrap:balance;line-height:1.35;margin:0}
+h1{font-size:clamp(28px,5vw,42px)} h2{font-size:clamp(22px,3.4vw,28px)} h3{font-size:18px}
+p{margin:0}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin-inline:auto}
+
+/* demo strip */
+.demo{background:var(--accent-soft);color:var(--warn);font-size:13px;text-align:center;padding-block:6px}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--header);color:var(--header-fg)}
+header.top .wrap{display:flex;align-items:center;gap:16px;padding-block:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:8px;text-decoration:none;color:inherit;margin-inline-end:auto}
+.brand b{font-family:var(--f-display);font-size:22px}
+.brand span{font-family:var(--f-ui);font-size:11px;letter-spacing:.08em;border:1px solid currentColor;border-radius:4px;padding:0 5px;opacity:.8}
+nav.main{display:flex;gap:2px;flex-wrap:wrap}
+nav.main a{color:inherit;text-decoration:none;padding:6px 10px;border-radius:6px;font-size:14px;opacity:.85}
+nav.main a:hover{opacity:1;background:rgba(255,255,255,.08)}
+nav.main a[aria-current="page"]{opacity:1;background:rgba(255,255,255,.14)}
+.theme-btn{background:none;border:1px solid rgba(255,255,255,.3);color:inherit;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+@media (max-width:760px){nav.main{width:100%;overflow-x:auto;flex-wrap:nowrap}nav.main a{white-space:nowrap}}
+
+main{padding-block:32px 64px}
+section.view{display:grid;gap:40px}
+.lead{font-family:var(--f-body);font-size:20px;color:var(--ink-2);max-width:62ch}
+.eyebrow{font-size:12px;letter-spacing:.06em;color:var(--accent);font-weight:600}
+.stack{display:grid;gap:14px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.grid > *{min-width:0}
+
+/* quran / source frames */
+.ayah{font-family:var(--f-quran);font-size:clamp(22px,3.4vw,30px);line-height:2.1;color:var(--ink);text-align:center}
+.ref{font-size:13px;color:var(--ink-2)}
+.src{border:1px solid var(--line);border-inline-start:3px double var(--accent);background:var(--sheet);padding:14px 16px;border-radius:4px}
+.src .label{font-size:12px;color:var(--accent);font-weight:600;margin-bottom:4px}
+.src .text{font-family:var(--f-body);font-size:19px}
+.placeholder{color:var(--ink-2);font-style:italic;font-family:var(--f-ui);font-size:14px}
+
+/* hero */
+.hero{display:grid;gap:22px;grid-template-columns:1.2fr 1fr;align-items:center;padding-block:12px}
+.hero > *{min-width:0}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+.hero-verse{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:26px 20px;display:grid;gap:10px;text-align:center}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:9px 18px;font-weight:600;text-decoration:none;cursor:pointer;border:1px solid transparent}
+.btn-p{background:var(--sage);color:var(--sheet)}
+.btn-s{background:transparent;border-color:var(--line);color:var(--ink)}
+.btn-s:hover{border-color:var(--ink-2)}
+.btn-sm{padding:5px 12px;font-size:13px;font-weight:500}
+
+/* domain tiles */
+.domain{display:grid;gap:6px;padding:16px;background:var(--sheet);border:1px solid var(--line);border-radius:8px;text-decoration:none;color:inherit;align-content:start}
+a.domain:hover{border-color:var(--sage)}
+.domain .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.domain p{font-size:13.5px;color:var(--ink-2)}
+.pill{font-size:11.5px;font-weight:600;border-radius:999px;padding:1px 9px;white-space:nowrap}
+.pill.ok{background:var(--sage-soft);color:var(--sage)}
+.pill.dev{background:var(--muted-soft);color:var(--ink-2)}
+.pill.draft{background:var(--muted-soft);color:var(--ink-2)}
+.pill.review{background:var(--warn-soft);color:var(--warn)}
+.pill.pub{background:var(--sage-soft);color:var(--sage)}
+.pill.intro{background:var(--accent-soft);color:var(--accent)}
+
+/* tabs (Oswati) */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{background:none;border:none;border-bottom:2px solid transparent;padding:8px 14px;cursor:pointer;color:var(--ink-2);white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+
+/* timeline */
+.timeline{display:grid;gap:0;border-inline-start:2px solid var(--line);margin-inline-start:8px}
+.tl{position:relative;padding:4px 22px 18px 0}
+.tl::before{content:"";position:absolute;inset-inline-start:-7px;top:12px;width:12px;height:12px;border-radius:50%;background:var(--paper);border:2px solid var(--accent)}
+.tl .yr{font-size:12.5px;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+.tl h3{font-size:17px}
+
+/* item card */
+.card{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:8px;align-content:start}
+.card .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tag{font-size:12px;color:var(--ink-2);background:var(--muted-soft);border-radius:4px;padding:0 7px}
+.fields{display:grid;gap:4px;font-size:13px}
+.fields div{display:grid;grid-template-columns:110px 1fr;gap:8px}
+.fields dt{color:var(--ink-2)}
+.fields dd{margin:0}
+
+/* researcher */
+.chat{background:var(--sheet);border:1px solid var(--line);border-radius:10px;display:grid;grid-template-rows:auto 1fr auto;min-height:520px;overflow:hidden}
+.chat-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--paper)}
+.chat-head label{font-size:13px;color:var(--ink-2)}
+.chat-head select{border:1px solid var(--line);border-radius:6px;padding:4px 8px;background:var(--sheet)}
+.chat-log{padding:16px;display:grid;gap:14px;align-content:start;overflow-y:auto;max-height:640px}
+.msg-u{justify-self:start;background:var(--sage);color:var(--sheet);padding:8px 14px;border-radius:12px 12px 12px 3px;max-width:80%}
+.msg-b{justify-self:stretch;display:grid;gap:10px;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--paper)}
+.msg-b .notice{font-size:12.5px;color:var(--ink-2);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.msg-b h4{margin:0;font-size:13px;color:var(--accent);font-weight:600}
+.limit{background:var(--warn-soft);color:var(--warn);border-radius:6px;padding:8px 12px;font-size:13.5px}
+.chat-in{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.chat-in input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:var(--paper)}
+.sugg{display:flex;gap:6px;flex-wrap:wrap}
+.sugg button{background:var(--sheet);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:13px;cursor:pointer}
+.sugg button:hover{border-color:var(--sage)}
+.side{display:grid;gap:14px;align-content:start}
+.two{display:grid;grid-template-columns:1fr 300px;gap:18px}
+.two > *{min-width:0}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+
+/* admin */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--sheet)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+th,td{text-align:start;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-weight:600;color:var(--ink-2);font-size:12.5px;background:var(--paper)}
+td.num{font-variant-numeric:tabular-nums}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.kpi b{font-size:26px;font-family:var(--f-display);font-variant-numeric:tabular-nums;display:block}
+.kpi span{font-size:12.5px;color:var(--ink-2)}
+.form{display:grid;gap:10px;max-width:420px}
+.form input,.form select,.form textarea{border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--sheet);width:100%}
+.log{font-size:13px;display:grid;gap:4px;color:var(--ink-2)}
+
+/* policies */
+.prose{max-width:68ch;display:grid;gap:12px;font-family:var(--f-body);font-size:18px}
+.prose ul{margin:0;padding-inline-start:20px;display:grid;gap:4px}
+.rules{display:grid;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--sheet)}
+.rules div{display:grid;grid-template-columns:170px 1fr;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.rules div:last-child{border-bottom:none}
+.rules b{font-family:var(--f-display);font-weight:500}
+@media (max-width:560px){.rules div{grid-template-columns:1fr;gap:2px}.fields div{grid-template-columns:1fr;gap:0}}
+
+footer{border-top:1px solid var(--line);padding-block:20px;font-size:13px;color:var(--ink-2)}
+footer .wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));inset-inline-start:50%;transform:translateX(50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:8px;font-size:14px;z-index:20}
+/* ---------- ticker ---------- */
+.ticker{display:flex;align-items:stretch;background:var(--accent-soft);border-bottom:1px solid var(--line);overflow:hidden}
+.ticker-label{flex:none;display:flex;align-items:center;gap:8px;background:var(--accent);color:var(--sheet);font-weight:600;font-size:13px;padding-block:8px;padding-inline-start:max(16px,env(safe-area-inset-right,0px));padding-inline-end:16px;position:relative;z-index:1}
+.ticker-label i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.ticker-view{flex:1;min-width:0;overflow:hidden;direction:ltr;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.ticker-track{display:flex;width:max-content}
+.ticker-track ul{display:flex;list-style:none;margin:0;padding:0;direction:rtl}
+.ticker-track li{display:flex;align-items:center;white-space:nowrap;font-size:14px;padding-block:8px}
+.ticker-track li::after{content:"✦";color:var(--accent);font-size:11px;margin-inline:24px}
+.ticker-track a{color:var(--ink);text-decoration:none}
+.ticker-track a:hover,.ticker-track a:focus-visible{color:var(--sage);text-decoration:underline}
+.ticker-track b{color:var(--accent);font-weight:600;margin-inline-end:6px}
+@media (max-width:560px){.ticker-label span{display:none}}
+
+/* ---------- headings & decoration ---------- */
+.w{display:inline-block}
+mark.hl{color:inherit;background:linear-gradient(var(--accent-soft),var(--accent-soft)) no-repeat right 88%/100% 38%;padding-inline:2px}
+h2{position:relative}
+.view h2::after{content:"";display:block;width:56px;height:2px;margin-top:8px;background:var(--accent);transform-origin:right}
+.hero-verse{position:relative;overflow:hidden}
+.hero-verse > *{position:relative}
+.hero-verse::before,.hero-verse::after{content:"";position:absolute;background:var(--accent);opacity:.13;
+  -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='none' stroke='black' stroke-width='1.4'><rect x='21' y='21' width='58' height='58'/><rect x='21' y='21' width='58' height='58' transform='rotate(45 50 50)'/><circle cx='50' cy='50' r='16'/><circle cx='50' cy='50' r='40'/></g></svg>") center/contain no-repeat;
+  mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='none' stroke='black' stroke-width='1.4'><rect x='21' y='21' width='58' height='58'/><rect x='21' y='21' width='58' height='58' transform='rotate(45 50 50)'/><circle cx='50' cy='50' r='16'/><circle cx='50' cy='50' r='40'/></g></svg>") center/contain no-repeat}
+.hero-verse::before{width:300px;height:300px;inset-inline-start:-110px;top:-110px}
+.hero-verse::after{width:200px;height:200px;inset-inline-end:-70px;bottom:-80px}
+.domain,.card,.btn{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+a.domain:hover,.card:hover{transform:translateY(-3px);box-shadow:0 10px 24px -14px rgba(0,0,0,.45)}
+.btn-p:hover{transform:translateY(-1px)}
+.pill.ok::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-inline-end:5px;vertical-align:middle}
+
+/* ---------- logo ---------- */
+:root{--logo-gold:#D6A44C;--logo-ink:#13302F}
+.brand{align-items:center;gap:10px}
+.logo{display:block;flex:none}
+.brand .logo{width:38px;height:38px}
+.logo .bg{fill:var(--logo-ink)}
+.logo .gold{fill:var(--logo-gold)}
+.logo .gold-s{fill:none;stroke:var(--logo-gold);stroke-width:2;stroke-linecap:round}
+.logo .star{transform-box:view-box;transform-origin:50% 50%}
+.about-logo{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.about-logo .logo{width:92px;height:92px}
+.about-logo .logo .bg{fill:var(--header)}
+
+/* ---------- ticker images ---------- */
+.ti{flex:none;width:36px;height:36px;border-radius:9px;background:var(--sheet);border:1px solid var(--line);display:grid;place-items:center;margin-inline-end:10px;color:var(--sage)}
+.ti.g{color:var(--accent)}
+.ti svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ti svg .f{fill:currentColor;stroke:none}
+.ti svg .cut{fill:var(--sheet)}
+.ticker-track li{padding-block:6px}
+.ticker-track a{display:flex;align-items:center}
+
+.email{user-select:all;font-family:var(--f-ui)}
+footer .copy-btn{background:none;border:1px solid var(--line);border-radius:4px;padding:0 8px;font-size:12px;cursor:pointer;color:var(--ink-2)}
+/* ---------- members & stats ---------- */
+.join-btn{background:var(--logo-gold);color:var(--logo-ink);font-weight:600;font-size:13.5px;text-decoration:none;border-radius:6px;padding:5px 14px;white-space:nowrap}
+.join-btn:hover{filter:brightness(1.08)}
+.counter{font-variant-numeric:tabular-nums;width:100%;display:flex;gap:14px;flex-wrap:wrap}
+.counter b{color:var(--ink);font-weight:600}
+.notice-box{background:var(--accent-soft);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:14px}
+.form{max-width:520px}
+.form label{font-size:13.5px;font-weight:500}
+.form input[type="checkbox"]{width:auto}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks label{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:13px;font-weight:400;cursor:pointer;background:var(--sheet)}
+.checks label:has(input:checked){border-color:var(--sage);background:var(--sage-soft);color:var(--sage)}
+.row-check{display:flex;gap:8px;align-items:flex-start;font-weight:400!important}
+.row-check input{margin-top:6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--sheet)}
+.seg button{background:none;border:none;padding:7px 16px;cursor:pointer;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--sage);color:var(--sheet)}
+.ok-box{background:var(--sage-soft);color:var(--sage);border-radius:8px;padding:14px 16px;display:grid;gap:6px}
+.bars{display:flex;align-items:flex-end;gap:5px;height:150px;direction:ltr}
+.bar{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}
+.bar i{display:block;width:100%;max-width:28px;background:var(--sage);border-radius:3px 3px 0 0;min-height:2px}
+.bar.today i{background:var(--accent)}
+.bar small{font-size:10.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.bar em{font-style:normal;font-size:10.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+.stackbar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--muted-soft)}
+.stackbar span{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-inline-end:5px;vertical-align:middle}
+.c-hit{background:var(--sage)} .c-miss{background:var(--accent)} .c-guard{background:var(--crit)} .c-closed{background:var(--ink-2)}
+.hlist{display:grid;gap:6px;font-size:13.5px}
+.hlist div{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.hlist .track{grid-column:1/-1;height:5px;border-radius:3px;background:var(--muted-soft);overflow:hidden}
+.hlist .track span{display:block;height:100%;background:var(--sage)}
+
+/* ---------- motion (only when the viewer allows it) ---------- */
+@media (prefers-reduced-motion:no-preference){
+  .ticker-track{animation:tick 50s linear infinite}
+  .ticker:hover .ticker-track,.ticker:focus-within .ticker-track{animation-play-state:paused}
+  .ticker-label i{animation:pulse 1.6s ease-in-out infinite}
+  .w{animation:rise .75s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * 70ms)}
+  mark.hl{animation:hl .9s 1s ease-out both}
+  .eyebrow{animation:slide .5s ease-out both}
+  .view h2::after{animation:grow .8s .25s cubic-bezier(.2,.7,.2,1) both}
+  .ayah{animation:reveal 1.6s .2s cubic-bezier(.3,.6,.2,1) both}
+  .lead{animation:up .6s .35s ease-out both}
+  .grid > *,.timeline .tl,.kpis .kpi,.rules > div,.sugg > *{animation:up .55s ease-out both;animation-delay:calc(var(--i,0) * 60ms + .15s)}
+  .hero-verse::before{animation:spin 90s linear infinite}
+  .hero-verse::after{animation:spin 70s linear infinite reverse}
+  .pill.ok::before{animation:pulse 1.8s ease-in-out infinite}
+  .chat-log > :last-child{animation:up .4s ease-out both}
+  .logo .star{animation:starIn 1.3s cubic-bezier(.2,.7,.2,1) both}
+  .logo .light{animation:glow 3s ease-in-out infinite}
+  .brand:hover .logo .star{animation:spin 6s linear infinite}
+  .ti{transition:transform .25s ease}
+  .ticker-track a:hover .ti{transform:rotate(-8deg) scale(1.08)}
+  #app.still :is(.w,mark.hl,.eyebrow,.ayah,.lead,.grid > *,.timeline .tl,.kpis .kpi,.rules > div,.sugg > *),#app.still .view h2::after{animation:none}
+}
+@media (prefers-reduced-motion:reduce){.ticker-view{overflow-x:auto}.ticker-track ul[aria-hidden]{display:none}}
+@keyframes tick{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+@keyframes rise{from{opacity:0;transform:translateY(.55em);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes hl{from{background-size:0% 38%}to{background-size:100% 38%}}
+@keyframes slide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes reveal{from{clip-path:inset(0 0 0 100%);opacity:.3}to{clip-path:inset(0 0 0 0);opacity:1}}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes starIn{from{transform:rotate(-135deg) scale(.4);opacity:0}to{transform:none;opacity:1}}
+@keyframes glow{0%,100%{opacity:1}50%{opacity:.45}}
+</style>
+
+<div dir="rtl" lang="ar">
+<div class="demo gut">نموذج أولي للعرض على المطور — المحتوى العلمي أمثلة تجريبية بانتظار مادة صاحبة المشروع المعتمدة</div>
+
+<header class="top gut">
+  <div class="wrap">
+    <a class="brand" href="#home" aria-label="على بصيرة AI — الرئيسية"><i class="logo-slot"></i><b>على بصيرة</b><span>AI</span></a>
+    <nav class="main" id="nav">
+      <a href="#home">الرئيسية</a>
+      <a href="#oswati">أسوتي</a>
+      <a href="#bahith">الباحث الشرعي</a>
+      <a href="#teaching">التدريس والتكوين</a>
+      <a href="#about">عن المنصة</a>
+      <a href="#policies">السياسات والتواصل</a>
+      <a href="#admin">الإدارة العلمية</a>
+    </nav>
+    <a class="join-btn" id="joinBtn" href="#join">انضم إلينا</a>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="تبديل المظهر">◐</button>
+  </div>
+</header>
+
+<div class="ticker" role="region" aria-label="أبرز ما في المنصة">
+  <div class="ticker-label"><i></i><span>أبرز ما في المنصة</span></div>
+  <div class="ticker-view"><div class="ticker-track"><ul id="tk1"></ul><ul id="tk2" aria-hidden="true"></ul></div></div>
+</div>
+
+<main class="gut"><div class="wrap" id="app"></div></main>
+
+<footer class="gut"><div class="wrap">
+  <span>على بصيرة AI — منصة للمعرفة والشرح والتعليم من مصادر معلومة. ليست جهة إفتاء.</span>
+  <span><a href="#policies">حدود الاستعمال</a> · <a href="#policies">الخصوصية</a> · <a href="#policies">الإبلاغ عن خطأ</a></span>
+  <span>تواصل: <span dir="ltr" class="email">alabasira.ai@gmail.com</span> <button class="copy-btn" type="button" data-copy="alabasira.ai@gmail.com">نسخ</button></span>
+  <span class="counter" id="counter" aria-live="polite"></span>
+</div></footer>
+</div>
+
+<script>
+/* ===================== BRAND ===================== */
+const LOGO=`<svg class="logo" viewBox="0 0 64 64" role="img" aria-label="شعار على بصيرة"><rect class="bg" width="64" height="64" rx="14"/><g transform="translate(32 32) scale(.82) translate(-32 -32)"><g class="star"><rect class="gold" x="14" y="14" width="36" height="36" rx="1"/><rect class="gold" x="14" y="14" width="36" height="36" rx="1" transform="rotate(45 32 32)"/></g><circle class="bg" cx="32" cy="32" r="15"/><path class="gold-s" d="M21 31q5.5-2 11 1q5.5-3 11-1v11q-5.5-2-11 1q-5.5-3-11-1z"/><path class="gold-s" d="M32 32v10.5"/><g class="light"><circle class="gold" cx="32" cy="24.5" r="2.4"/></g></g></svg>`;
+document.querySelectorAll(".logo-slot").forEach(s=>s.outerHTML=LOGO);
+
+/* Ticker images: hand-drawn line icons, one per headline (no people depicted) */
+const ICONS={
+ palm:`<path d="M12 22c0-4 .4-8 0-12"/><path d="M12 10C9 7 6 7 3 9M12 10c3-3 6-3 9-1M12 10C10.5 6.5 8.5 4.5 5 4M12 10c1.5-3.5 3.5-5.5 7-6M12 10V3"/><circle class="f" cx="10.6" cy="12" r="1"/><circle class="f" cx="13.4" cy="12" r="1"/>`,
+ search:`<path d="M2 5h6a3 3 0 0 1 3 3v11a2 2 0 0 0-2-2H2zM22 5h-6a3 3 0 0 0-3 3v4"/><circle class="cut" cx="16.5" cy="15.5" r="3.6"/><path d="M19.2 18.2 22 21"/>`,
+ steps:`<path d="M3 21h4v-4h4v-4h4V9h4V5"/><path d="M19 5V2.5l2.5 1.2L19 5"/>`,
+ flower:`<g transform="translate(12 12)"><ellipse rx="2.3" ry="8.5"/><ellipse rx="2.3" ry="8.5" transform="rotate(45)"/><ellipse rx="2.3" ry="8.5" transform="rotate(90)"/><ellipse rx="2.3" ry="8.5" transform="rotate(135)"/><circle class="cut" r="2.6"/><circle class="f" r="1.2"/></g>`,
+ ask:`<path d="M4 4h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M10 8.3a2 2 0 1 1 2.8 1.8c-.6.3-.8.7-.8 1.3"/><circle class="f" cx="12" cy="13.3" r=".8"/>`,
+ rehal:`<path d="M5 21 19 11M19 21 5 11"/><path d="M3 9.5 12 12l9-2.5V4.5L12 7 3 4.5z"/><path d="M12 7v5"/>`,
+ books:`<rect x="3" y="15.5" width="18" height="4.5" rx="1"/><rect x="5" y="10.5" width="14" height="5" rx="1"/><rect x="4" y="5.5" width="15" height="5" rx="1"/><path d="M7 15.5v4.5M9 10.5v5M7 5.5v5"/>`,
+ scroll:`<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 10h7M9 13h5"/><circle class="f" cx="12.5" cy="17.5" r="2"/>`,
+ shield:`<path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/><rect x="9.5" y="11" width="5" height="4.2" rx=".6"/><path d="M10.5 11V9.6a1.5 1.5 0 0 1 3 0V11"/>`,
+};
+
+/* ===================== DATA (editable content base) ===================== */
+const DOMAINS=[
+ {k:"quran",t:"القرآن الكريم وعلومه",d:"نص مضبوط محدد الرواية، وبحث في التفسير وعلوم القرآن بمراجع محددة.",s:"dev"},
+ {k:"hadith",t:"الحديث النبوي وعلومه",d:"البحث والتوثيق والشروح مع بيان المصدر ودرجة الثبوت من أهل الاختصاص.",s:"dev"},
+ {k:"sira",t:"السيرة النبوية — أسوتي",d:"السيرة والشمائل والمواقف والمهارات الحياتية والتعلم التفاعلي.",s:"ok",href:"#oswati"},
+ {k:"fiqh",t:"الفقه الإسلامي وأصوله",d:"بحث وصفي في المذاهب الأربعة والأقوال والأدلة، دون فتوى شخصية.",s:"dev"},
+ {k:"econ",t:"الاقتصاد الإسلامي",d:"المعرفة الاقتصادية والمالية الإسلامية. حاسبة الزكاة مؤجلة لمراجعة متخصصة.",s:"dev"},
+ {k:"psy",t:"علم النفس الإسلامي",d:"مواد علمية وتربوية وتثقيفية. لا تشخيص ولا علاج آلي.",s:"dev"},
+ {k:"media",t:"الإعلام الإسلامي",d:"التحقق والتربية الإعلامية وتوثيق المحتوى، بلا دعاية حزبية.",s:"dev"},
+ {k:"teach",t:"التدريس والتكوين الشرعي",d:"واجهة للأستاذ وبنك وضعيات وأنشطة وتقويمات.",s:"intro",href:"#teaching"},
+];
+const STATUS_LABEL={ok:"متاح — تجريبي",dev:"قيد التطوير",intro:"واجهة تعريفية",draft:"مسودة",review:"تحت التحقق",pub:"منشور"};
+
+const SIRA=[
+ {y:"عام الفيل",t:"المولد والنشأة",n:"المولد بمكة، والنشأة في بني سعد ثم في كفالة عبد المطلب فأبي طالب."},
+ {y:"قبل البعثة",t:"الشباب والعمل",n:"رعي الغنم والتجارة، والزواج من خديجة رضي الله عنها."},
+ {y:"سن الأربعين",t:"البعثة ونزول الوحي",n:"بدء نزول الوحي في غار حراء، ثم الدعوة السرية فالجهرية."},
+ {y:"العهد المكي",t:"الدعوة والصبر",n:"الدعوة في مكة، والهجرة إلى الحبشة، وعام الحزن، والطائف."},
+ {y:"1 هـ",t:"الهجرة إلى المدينة",n:"الهجرة وبناء المسجد والمؤاخاة ووثيقة المدينة."},
+ {y:"2 – 5 هـ",t:"بدر وأحد والخندق",n:"الغزوات الكبرى وما فيها من مشورة وتخطيط وثبات."},
+ {y:"6 هـ",t:"صلح الحديبية",n:"الصلح والتفاوض، ونزول سورة الفتح."},
+ {y:"8 هـ",t:"فتح مكة",n:"الفتح والعفو العام."},
+ {y:"10 – 11 هـ",t:"حجة الوداع والوفاة",n:"حجة الوداع وخطبتها، ثم الوفاة في ربيع الأول."},
+];
+
+/* Items = Item entity in the content base (spec §5). Text/docs fields left for the owner. */
+let ITEMS=[
+ {id:"MW-01",type:"موقف",title:"المشورة يوم الخندق",tags:["القيادة","المشورة","العمل الجماعي"],skills:["الاستماع وقبول الرأي","العمل الجماعي"],status:"draft",ver:1,editor:"—"},
+ {id:"MW-02",type:"موقف",title:"التفاوض في صلح الحديبية",tags:["التفاوض","ضبط النفس"],skills:["التفاوض","ضبط الانفعال"],status:"draft",ver:1,editor:"—"},
+ {id:"MW-03",type:"موقف",title:"العفو يوم فتح مكة",tags:["العفو","القيادة"],skills:["العفو عند المقدرة"],status:"draft",ver:1,editor:"—"},
+ {id:"MW-04",type:"موقف",title:"بناء المسجد والمؤاخاة",tags:["بناء المجتمع","التكافل"],skills:["بناء الثقة","المبادرة"],status:"draft",ver:1,editor:"—"},
+ {id:"MW-05",type:"موقف",title:"الثبات في الطائف",tags:["الصبر","الأمل"],skills:["الصمود أمام الإخفاق","التفاؤل الواقعي"],status:"draft",ver:1,editor:"—"},
+ {id:"SH-01",type:"شمائل",title:"خُلقه في بيته",tags:["الشمائل","الأسرة"],status:"draft",ver:1,editor:"—"},
+ {id:"SH-02",type:"شمائل",title:"تواضعه مع أصحابه",tags:["الشمائل","التواضع"],status:"draft",ver:1,editor:"—"},
+ {id:"SH-03",type:"شمائل",title:"رحمته بالصغار",tags:["الشمائل","الرحمة"],status:"draft",ver:1,editor:"—"},
+ {id:"SH-04",type:"شمائل",title:"صفة كلامه",tags:["الشمائل","التواصل"],status:"draft",ver:1,editor:"—"},
+ {id:"SH-05",type:"شمائل",title:"زهده في العيش",tags:["الشمائل","الزهد"],status:"draft",ver:1,editor:"—"},
+];
+
+/* FAQ bank (option A). Only the two Qur'an-based answers carry real text; the rest are slots for the owner's approved answers. */
+const FAQ=[
+ {id:"FAQ-01",q:"ما معنى الأسوة الحسنة؟",syn:["اسوة","أسوة","قدوة","الاقتداء","اقتدي","اسوتي","أسوتي"],
+  sum:"الأسوة هي القدوة التي يُتّبع أثرها، والآية أصلٌ في الاقتداء بالنبي ﷺ، ومنها أُخذ اسم «أسوتي».",
+  quran:"لَّقَدْ كَانَ لَكُمْ فِي رَسُولِ اللَّهِ أُسْوَةٌ حَسَنَةٌ لِّمَن كَانَ يَرْجُو اللَّهَ وَالْيَوْمَ الْآخِرَ وَذَكَرَ اللَّهَ كَثِيرًا",
+  ref:"سورة الأحزاب، الآية 21 — رواية حفص عن عاصم",exp:null,status:"review"},
+ {id:"FAQ-02",q:"ما معنى «على بصيرة»؟",syn:["بصيرة","على بصيرة","اسم المنصة","سبيلي"],
+  sum:"البصيرة هي العلم واليقين في الدعوة. ومن الآية أُخذ اسم المنصة تعبيرًا عن تقديم المعرفة من مصادر معلومة.",
+  quran:"قُلْ هَٰذِهِ سَبِيلِي أَدْعُو إِلَى اللَّهِ ۚ عَلَىٰ بَصِيرَةٍ أَنَا وَمَنِ اتَّبَعَنِي",
+  ref:"سورة يوسف، الآية 108 — رواية حفص عن عاصم",exp:null,status:"review"},
+ {id:"FAQ-03",q:"كيف كان النبي ﷺ يستشير أصحابه؟",syn:["شورى","مشورة","استشارة","يستشير","الخندق","رأي"],status:"draft",link:"MW-01"},
+ {id:"FAQ-04",q:"ماذا نتعلم من صلح الحديبية في التفاوض؟",syn:["الحديبية","تفاوض","التفاوض","صلح","حوار"],status:"draft",link:"MW-02"},
+ {id:"FAQ-05",q:"كيف عامل النبي ﷺ أهل مكة يوم الفتح؟",syn:["فتح مكة","العفو","عفا","الفتح","سامح"],status:"draft",link:"MW-03"},
+ {id:"FAQ-06",q:"كيف كان خلق النبي ﷺ في بيته؟",syn:["بيته","البيت","أهله","زوجاته","الأسرة","خلقه"],status:"draft",link:"SH-01"},
+ {id:"FAQ-07",q:"كيف كان النبي ﷺ يعامل الأطفال؟",syn:["الأطفال","الصغار","الصبيان","طفل","أولاد"],status:"draft",link:"SH-03"},
+ {id:"FAQ-08",q:"ماذا حدث في الهجرة إلى المدينة؟",syn:["الهجرة","المدينة","يثرب","هاجر"],status:"draft"},
+ {id:"FAQ-09",q:"كيف تعامل النبي ﷺ مع الحزن والإخفاق في الطائف؟",syn:["الطائف","الحزن","عام الحزن","الإخفاق","الفشل","الصبر"],status:"draft",link:"MW-05"},
+ {id:"FAQ-10",q:"ما هي الشمائل المحمدية؟",syn:["شمائل","الشمائل","صفات","صفته","أخلاق"],status:"draft"},
+];
+
+/* Guided-refusal classes (spec §10) */
+const GUARD=[
+ {re:/(حكم|يجوز|حلال|حرام|فتوى|افتني|أفتني|هل علي|هل يلزم|كفارة|طلاق)/,msg:"يبدو أن سؤالك يطلب حكمًا شرعيًا لحالة شخصية. الباحث يعرض المعرفة من مصادرها ولا يصدر فتوى. يُرجى الرجوع إلى مفتٍ أو عالم مؤهل في بلدك."},
+ {re:/(اكتئاب|قلق شديد|انتحار|أؤذي نفسي|علاج نفسي|تشخيص|وسواس)/,msg:"لا يقدّم الباحث تقييمًا أو علاجًا لحالة نفسية. إن كنت تمر بضيق، فالرجوع إلى مختص نفسي مؤهل أو جهة دعم في بلدك هو الخطوة الصحيحة."},
+ {re:/(كافر|تكفير|مبتدع|ضال|خصم|خصومة)/,msg:"لا يُصدر الباحث أحكامًا على الأشخاص أو الجماعات. يمكنك السؤال عن المسألة العلمية نفسها، أو الرجوع إلى أهل العلم المختصين."},
+];
+
+let LOG=[{t:"2026-11-07",m:"إنشاء قاعدة المحتوى التجريبية (الإصدار 1.0)"}];
+
+/* ===================== HELPERS ===================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pill=s=>`<span class="pill ${s}">${STATUS_LABEL[s]}</span>`;
+const norm=s=>s.replace(/[ًٌٍَُِّْـ]/g,"").replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").toLowerCase();
+function toast(m){const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2400)}
+const ph=(f)=>`<span class="placeholder">[${f} — يُدخل من صاحبة المشروع]</span>`;
+
+/* ===================== VIEWS ===================== */
+const V={};
+
+V.home=()=>`
+<section class="view">
+  <div class="hero">
+    <div class="stack">
+      <div class="eyebrow">منصة معرفية عربية</div>
+      <h1>المعرفة الشرعية <mark class="hl">من مصادرها</mark>، بشرح واضح ومرجع يمكن التحقق منه</h1>
+      <p class="lead">«على بصيرة» منصة للبحث والشرح والتعليم. كل جواب يُعرض مع نصه ومصدره وموضعه. وحين لا يوجد سند كافٍ نقول ذلك صراحة.</p>
+      <div class="btns"><a class="btn btn-p" href="#bahith">اسأل الباحث</a><a class="btn btn-s" href="#oswati">ادخل إلى أسوتي</a></div>
+    </div>
+    <div class="hero-verse">
+      <div class="ayah">قُلْ هَٰذِهِ سَبِيلِي أَدْعُو إِلَى اللَّهِ ۚ عَلَىٰ بَصِيرَةٍ أَنَا وَمَنِ اتَّبَعَنِي</div>
+      <div class="ref">سورة يوسف، الآية 108</div>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div style="display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap">
+      <h2>المجالات الثمانية</h2>
+      <span class="ref">حالة الخدمات محدّثة يدويًا من الإدارة العلمية</span>
+    </div>
+    <div class="grid">${DOMAINS.map(d=>{
+      const tag=d.href?"a":"div";
+      return `<${tag} class="domain" ${d.href?`href="${d.href}"`:""}><div class="row"><h3>${d.t}</h3></div><p>${d.d}</p><div>${pill(d.s)}</div></${tag}>`}).join("")}
+    </div>
+  </div>
+
+  <div class="src">
+    <div class="label">حدود المنصة</div>
+    <p>المنصة تقدّم البحث العلمي والشرح والتعليم، ولا تُصدر فتاوى شخصية ولا تدّعي سلطة دينية. الإجابات الآلية مساعدة بحثية قابلة للخطأ والتصحيح، والمواد الثابتة تمر بحالات: مسودة، تحت التحقق، منشورة.</p>
+  </div>
+</section>`;
+
+/* ---------- OSWATI ---------- */
+let oTab="sira";
+V.oswati=()=>{
+ const tabs=[["sira","السيرة المختصرة"],["mawaqif","المواقف والمهارات"],["shamail","الشمائل"],["live","كيف نحيا بالسيرة؟"],["lib","مكتبة المصادر"]];
+ return `<section class="view">
+  <div class="stack">
+    <div class="eyebrow">المنتج الأول · نسخة تجريبية</div>
+    <h1>أسوتي</h1>
+    <p class="lead">السيرة النبوية من المعرفة إلى الاقتداء.</p>
+    <div class="src" style="text-align:center"><div class="ayah" style="font-size:24px">لَّقَدْ كَانَ لَكُمْ فِي رَسُولِ اللَّهِ أُسْوَةٌ حَسَنَةٌ</div><div class="ref">سورة الأحزاب، الآية 21</div></div>
+    <div class="btns"><a class="btn btn-p btn-sm" href="#bahith">اسأل أسوتي</a></div>
+  </div>
+  <div class="stack">
+    <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${oTab===k}" data-otab="${k}">${l}</button>`).join("")}</div>
+    <div id="otab">${OT[oTab]()}</div>
+  </div>
+ </section>`};
+
+const itemCard=(it,full)=>`<article class="card">
+  <div class="meta"><span class="tag">${it.id}</span><span class="tag">${it.type}</span>${pill(it.status)}</div>
+  <h3>${esc(it.title)}</h3>
+  <div class="meta">${it.tags.map(t=>`<span class="tag">#${t}</span>`).join("")}</div>
+  ${it.skills?`<p style="font-size:13.5px"><b>المهارات المستخرجة:</b> ${it.skills.join("، ")}</p>`:""}
+  <div class="src"><div class="label">النص الأصلي</div>${ph("النص حرفيًا")}</div>
+  ${full?`<dl class="fields">
+    <div><dt>ملخص السياق</dt><dd>${ph("الملخص")}</dd></div>
+    <div><dt>التوثيق</dt><dd>${ph("الكتاب، المؤلف، الطبعة، الموضع")}</dd></div>
+    <div><dt>حالة الثبوت</dt><dd>${ph("ملاحظة المتخصص")}</dd></div>
+    <div><dt>الترخيص</dt><dd>${ph("رابط فقط / اقتباس محدود / نسخ مرخّص")}</dd></div>
+  </dl>`:""}
+</article>`;
+
+const OT={
+ sira:()=>`<div class="stack">
+   <p class="ref">هيكل زمني مقترح. النص العلمي لكل محطة ومراجعه تُعدّ من صاحبة المشروع.</p>
+   <div class="timeline">${SIRA.map(s=>`<div class="tl"><div class="yr">${s.y}</div><h3>${s.t}</h3><p style="color:var(--ink-2);font-size:14px">${s.n}</p></div>`).join("")}</div></div>`,
+ mawaqif:()=>`<div class="stack"><p class="ref">خمسة مواقف تُستخرج منها عشر مهارات حياتية بعد الشرح والسياق والتحقق. لا يُشترط أن يُنتج كل موقف مهارتين.</p>
+   <div class="grid">${ITEMS.filter(i=>i.type==="موقف").map(i=>itemCard(i,true)).join("")}</div></div>`,
+ shamail:()=>`<div class="stack"><p class="ref">خمس مواد من الشمائل، مع الإحالة لمصدر الحديث وبيان درجة الثبوت لكل نص على حدة، لا لكتاب الشمائل كله.</p>
+   <div class="grid">${ITEMS.filter(i=>i.type==="شمائل").map(i=>itemCard(i,true)).join("")}</div></div>`,
+ live:()=>`<div class="stack"><p class="ref">لكل مهارة أربعة أجزاء ثابتة. يُفصل بين الحدث الثابت والشرح والاستنباط المعاصر.</p>
+   <div class="grid">${["الدلالة التربوية","المهارة","تطبيق معاصر","نشاط أو سؤال تقويم"].map((h,i)=>`<div class="card"><span class="tag" style="justify-self:start">الجزء ${i+1} من 4</span><h3>${h}</h3><p class="placeholder">${["ما يدل عليه الموقف تربويًا، بعد الشرح المراجَع.","اسم المهارة الحياتية وتعريفها الإجرائي.","موقف من حياة اليوم يُطبَّق فيه المعنى، مفصول عن النص.","سؤال أو نشاط قصير يقيس الفهم والتطبيق."][i]}</p></div>`).join("")}</div>
+   <div class="card"><div class="meta"><span class="tag">مثال على الربط</span></div><h3>المشورة يوم الخندق ← الاستماع وقبول الرأي</h3><p style="font-size:14px;color:var(--ink-2)">يظهر هنا الجزء الأول إلى الرابع للمهارة بعد اعتماد نص الموقف ومراجعه.</p></div></div>`,
+ lib:()=>`<div class="stack"><p class="ref">سجل المصادر يُنشأ قبل أي إدخال تقني. وجود كتاب على الإنترنت لا يعني جواز نسخه أو استخدامه آليًا.</p>
+   <div class="tbl-wrap"><table><thead><tr><th>العنوان</th><th>المؤلف</th><th>الطبعة / المحقق</th><th>نطاق الاستعمال</th><th>الترخيص</th><th>الرابط</th></tr></thead><tbody>
+   ${[1,2,3].map(n=>`<tr><td>${ph("المصدر "+n)}</td><td>—</td><td>—</td><td>—</td><td>${pill("review")}</td><td>—</td></tr>`).join("")}
+   </tbody></table></div></div>`,
+};
+
+/* ---------- RESEARCHER (option A) ---------- */
+let chat=[];
+function answer(qRaw,domain){
+ if(domain!=="sira") return {kind:"closed"};
+ for(const g of GUARD) if(g.re.test(qRaw)) return {kind:"guard",msg:g.msg};
+ const q=norm(qRaw); const words=q.split(/\s+/).filter(w=>w.length>2);
+ let best=null,score=0;
+ for(const f of FAQ){
+   let s=0; const hay=norm(f.q+" "+f.syn.join(" "));
+   for(const syn of f.syn) if(q.includes(norm(syn))) s+=3;
+   for(const w of words) if(hay.includes(w)) s+=1;
+   if(s>score){score=s;best=f}
+ }
+ if(score>=3) return {kind:"hit",f:best,near:FAQ.filter(f=>f!==best).sort(()=>0).slice(0,0)};
+ const near=FAQ.map(f=>{let s=0;const hay=norm(f.q+" "+f.syn.join(" "));for(const w of words)if(hay.includes(w))s++;return[f,s]}).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
+ return {kind:"miss",near};
+}
+function renderAnswer(a){
+ if(a.kind==="closed") return `<div class="msg-b"><div class="limit">هذا المجال قيد التطوير. لم تُجهَّز له بعدُ قاعدة علمية صالحة، لذلك البحث فيه غير متاح. اختر «السيرة والشمائل».</div></div>`;
+ if(a.kind==="guard") return `<div class="msg-b"><div class="notice">توجيه</div><div class="limit">${a.msg}</div></div>`;
+ if(a.kind==="miss") return `<div class="msg-b"><p><b>لم أعثر في المواد المتاحة على جواب موثق.</b></p>${a.near.length?`<p class="ref">مواد قريبة:</p><div class="sugg">${a.near.map(f=>`<button data-ask="${esc(f.q)}">${f.q}</button>`).join("")}</div>`:`<p class="ref">جرّب صياغة أخرى أو اختر من الأسئلة المقترحة.</p>`}</div>`;
+ const f=a.f; const linked=f.link?ITEMS.find(i=>i.id===f.link):null;
+ return `<div class="msg-b">
+  <div class="notice"><span>الجواب من بنك المواد المراجَعة</span>${pill(f.status)}<span class="tag">${f.id}</span></div>
+  <div><h4>خلاصة موجزة</h4><p style="font-family:var(--f-body);font-size:18px">${f.sum?f.sum:ph("الخلاصة المعتمدة")}</p></div>
+  <div><h4>النص المستند إليه</h4><div class="src">${f.quran?`<div class="ayah" style="font-size:24px;text-align:start">${f.quran}</div>`:ph("النص الأصلي")}</div></div>
+  <div><h4>شرح المادة</h4><p>${f.exp?f.exp:ph("الشرح المراجَع")}</p></div>
+  <div><h4>بيانات التوثيق والرابط</h4><p class="ref">${f.ref?f.ref+" · "+ph("رابط المصدر النصي المعتمد"):ph("الكتاب، الموضع، الرابط")}</p></div>
+  ${linked?`<p class="ref">بطاقة مرتبطة: <a href="#oswati" data-goto-tab="${linked.type==="موقف"?"mawaqif":"shamail"}">${linked.title}</a></p>`:""}
+  <div class="limit" style="font-size:12.5px">${f.status==="pub"?"مادة منشورة بعد المراجعة.":"هذه المادة لم تُعتمد للنشر بعد."} الشرح المعروض تبسيط تحريري وليس نصًا للمؤلف.</div>
+  <div class="btns"><button class="btn btn-s btn-sm" data-report="${f.id}">أبلغ عن خطأ في هذا الجواب</button></div>
+ </div>`;
+}
+V.bahith=()=>`<section class="view">
+ <div class="stack"><div class="eyebrow">الإصدار الاقتصادي (الخيار أ) · دون ذكاء توليدي</div><h1>الباحث الشرعي</h1>
+ <p class="lead">يبحث في أسئلة وأجوبة معدّة مسبقًا وفي بطاقات «أسوتي». لا يؤلف إجابات حرة ولا ينشئ روايات.</p></div>
+ <div class="two">
+  <div class="chat">
+   <div class="chat-head"><label for="dom">المجال</label><select id="dom">${DOMAINS.filter(d=>d.k!=="teach").map(d=>`<option value="${d.k}" ${d.k==="sira"?"selected":""}>${d.k==="sira"?"السيرة والشمائل":d.t}${d.s==="ok"?"":" — غير متاح"}</option>`).join("")}</select><span class="ref" style="margin-inline-start:auto">المصادر المتاحة: بنك أسوتي (${FAQ.length} أسئلة)</span></div>
+   <div class="chat-log" id="log">${chat.length?chat.map(c=>c.u?`<div class="msg-u">${esc(c.u)}</div>`:renderAnswer(c.a)).join(""):`<div class="msg-b"><p>اكتب سؤالك عن السيرة والشمائل، أو اختر سؤالًا مقترحًا.</p><div class="sugg">${FAQ.slice(0,5).map(f=>`<button data-ask="${esc(f.q)}">${f.q}</button>`).join("")}</div></div>`}</div>
+   <form class="chat-in" id="askForm"><input id="q" placeholder="مثال: كيف كان النبي ﷺ يستشير أصحابه؟" autocomplete="off"><button class="btn btn-p" type="submit">ابحث</button></form>
+  </div>
+  <aside class="side">
+   <div class="card"><h3>كيف يعمل؟</h3><ol style="margin:0;padding-inline-start:18px;font-size:13.5px;display:grid;gap:4px">
+     <li>يطابق الكلمات المفتاحية ومرادفاتها في بنك الأسئلة.</li><li>يعرض أفضل تطابق مع النص والمصدر والموضع.</li><li>إن لم يجد سندًا كافيًا يقول ذلك ويقترح مواد قريبة.</li><li>أسئلة الفتوى الشخصية والعلاج النفسي تُوجَّه إلى المختصين.</li></ol></div>
+   <div class="card"><h3>جرّب الحالات</h3><div class="sugg">
+     <button data-ask="ما معنى الأسوة الحسنة؟">جواب بنص قرآني</button>
+     <button data-ask="هل يجوز لي تأخير الصلاة؟">سؤال فتوى</button>
+     <button data-ask="ما عدد غزوات الروم؟">لا يوجد سند</button></div></div>
+   <div class="card"><h3>بيانات المحادثة</h3><p style="font-size:13.5px;color:var(--ink-2)">لا تُحفظ المحادثات افتراضيًا. بلاغات الأخطاء تُسجَّل دون بيانات شخصية.</p></div>
+  </aside>
+ </div>
+</section>`;
+
+/* ---------- TEACHING ---------- */
+V.teaching=()=>`<section class="view">
+ <div class="stack"><div class="eyebrow">واجهة تعريفية</div><h1>التدريس والتكوين الشرعي</h1>
+ <p class="lead">مساحة للأستاذ: بنك وضعيات وأنشطة وتقويمات، تبدأ بمثال واحد وتتوسع لاحقًا.</p></div>
+ <div class="card" style="max-width:720px">
+   <div class="meta"><span class="tag">وضعية-مثال</span>${pill("draft")}<span class="tag">مادة التربية الإسلامية</span></div>
+   <h3>وضعية: الاستشارة في العمل الجماعي</h3>
+   <dl class="fields">
+     <div><dt>السياق</dt><dd>فريق مدرسي يختلف أعضاؤه حول تنظيم نشاط ختام السنة.</dd></div>
+     <div><dt>السند</dt><dd>بطاقة «المشورة يوم الخندق» (MW-01)</dd></div>
+     <div><dt>المطلوب</dt><dd>اقترح خطوات لاتخاذ القرار تستحضر قيمة الشورى، مع تعليل كل خطوة.</dd></div>
+     <div><dt>معيار التقويم</dt><dd>استحضار السند · وضوح الخطوات · واقعية التطبيق</dd></div>
+     <div><dt>المواءمة</dt><dd>${ph("مرجع المنهاج المغربي المتحقق منه")}</dd></div>
+   </dl>
+ </div>
+ <div class="src" style="max-width:720px"><div class="label">تنبيه</div><p>المواد من إعداد المنصة، وليست معتمدة من الوزارة ما لم يثبت ذلك. توليد الوضعيات المصورة وملفات PDF مرحلة لاحقة خارج النسخة الأولى.</p></div>
+</section>`;
+
+/* ---------- ABOUT ---------- */
+V.about=()=>`<section class="view">
+ <div class="about-logo">${LOGO}<div class="stack" style="gap:4px"><div class="eyebrow">عن المنصة</div><h1>على بصيرة AI</h1><p class="ref">النجمة الثمانية إطار، والكتاب المفتوح معرفة من مصادرها، والنقطة المضيئة بصيرة.</p></div></div>
+ <div class="prose">
+   <p>منصة عربية موحّدة لتقديم المعرفة الشرعية والشرح والتعليم من مصادر معلومة، مع فصل صريح بين خدمة البحث العلمي وبين الإفتاء أو أي ادعاء بسلطة دينية.</p>
+   <h2>الرسالة</h2><p>${ph("النص التعريفي المعتمد للمنصة")}</p>
+   <h2>المؤسسة</h2><p><b>${ph("الاسم الكامل")}</b> — مؤسسة المشروع والمشرفة العامة.</p>
+   <h2>الحدود العلمية</h2>
+   <ul><li>لا فتوى شخصية ولا ترجيح آلي مستقل بين المذاهب.</li><li>لا تشخيص ولا علاج نفسي بالذكاء الاصطناعي.</li><li>النص القرآني من مصدر نصي مضبوط محدد الرواية.</li><li>عند غياب السند يُصرَّح بذلك، بلا مصدر مختلق أو رابط تخميني.</li></ul>
+   <h2>المراجعة العلمية</h2><p>المشروع في مرحلة التأسيس ويُدار من مؤسسة واحدة، مع استشارة المختصين عند الحاجة قبل اعتماد أي مادة خلافية.</p>
+ </div>
+</section>`;
+
+/* ---------- POLICIES ---------- */
+V.policies=()=>`<section class="view">
+ <div class="stack"><div class="eyebrow">السياسات والتواصل</div><h1>حدود الاستعمال والخصوصية</h1></div>
+ <div class="stack"><h2>ضوابط كل مجال</h2>
+ <div class="rules">${[
+  ["القرآن","يُعرض من مصدر نصي مضبوط محدد الرواية، ولا يُؤلَّف من ذاكرة نموذج."],
+  ["الحديث والشمائل","النص مع تخريجه، ودرجة الثبوت منسوبة لأهل الاختصاص."],
+  ["السيرة والمهارات","فصل الحدث الثابت عن الشرح والاستنباط المعاصر."],
+  ["الفقه","عرض أقوال المذاهب الأربعة من مصادر محددة، بلا فتوى فردية."],
+  ["الاقتصاد الإسلامي","مواد تعليمية؛ حساب الزكاة الآلي مؤجل."],
+  ["علم النفس الإسلامي","دراسة تربوية وبحثية؛ لا تشخيص ولا علاج."],
+  ["الإعلام الإسلامي","تحقق وتربية إعلامية؛ لا أجندات حزبية."],
+  ["التدريس","مواءمة مع المناهج المغربية المتحقق منها."],
+ ].map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join("")}</div></div>
+ <div class="stack"><h2>الخصوصية</h2><div class="prose" style="font-size:17px"><ul>
+   <li>لا تُحفظ محادثات المستخدمين افتراضيًا.</li><li>بلاغات الأخطاء لا تطلب بيانات شخصية.</li><li>مفاتيح الخدمات الخارجية على الخادم فقط.</li><li>تُراعى أحكام القانون المغربي 09-08 لحماية المعطيات الشخصية.</li></ul></div></div>
+ <div class="stack"><h2>تواصل معنا</h2>
+  <div class="card" style="max-width:520px"><p>للاستفسارات والاقتراحات والتعاون العلمي، راسلنا على:</p>
+   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b dir="ltr" class="email" style="font-size:17px">alabasira.ai@gmail.com</b><button class="btn btn-s btn-sm copy-btn" type="button" data-copy="alabasira.ai@gmail.com">انسخ البريد</button></div>
+   <p class="ref">لا تُرسل في البريد بيانات شخصية حساسة. لطلبات الفتوى يُرجى الرجوع إلى المفتين المؤهلين في بلدك.</p></div></div>
+ <div class="stack"><h2>الإبلاغ عن خطأ علمي أو رابط معطل</h2>
+  <form class="form" id="repForm">
+   <label for="rType">نوع الخطأ</label><select id="rType"><option>خطأ علمي</option><option>رابط معطل</option><option>خطأ في التوثيق</option><option>أخرى</option></select>
+   <label for="rWhere">الموضع (رقم المادة أو الصفحة)</label><input id="rWhere" placeholder="مثال: FAQ-03">
+   <label for="rNote">الوصف</label><textarea id="rNote" rows="3"></textarea>
+   <button class="btn btn-p" type="submit">أرسل البلاغ</button>
+   <p class="ref">لا نطلب اسمك أو بريدك.</p>
+  </form></div>
+</section>`;
+
+/* ===================== BACKEND LAYER =====================
+   One switch for the whole platform.
+   - Empty CONFIG  → preview mode: works anywhere, data stays in this browser only.
+   - Filled CONFIG → live mode on Supabase (run supabase-setup.sql first).
+   The anon key is public by design; Row Level Security in the SQL protects the data. */
+const CONFIG={
+  SUPABASE_URL:"",        // مثال: https://abcd1234.supabase.co
+  SUPABASE_ANON_KEY:"",   // Project Settings → API → anon public
+};
+let LIVE=!!(CONFIG.SUPABASE_URL&&CONFIG.SUPABASE_ANON_KEY);
+const ROLE_LABEL={student:"طالب/ة",teacher:"أستاذ/ة",researcher:"باحث/ة",interested:"مهتم/ة"};
+const COUNTRIES=["المغرب","مصر","الجزائر","تونس","ليبيا","موريتانيا","السعودية","الإمارات","قطر","الكويت","الأردن","فلسطين","العراق","سوريا","لبنان","السودان","اليمن","أخرى"];
+const PAGE_LABEL={home:"الرئيسية",oswati:"أسوتي",bahith:"الباحث",teaching:"التدريس",about:"عن المنصة",policies:"السياسات",join:"الانضمام",account:"حسابي",admin:"الإدارة"};
+const OUT_LABEL={hit:"وُجد جواب",miss:"لا يوجد سند",guard:"وُجّه لمختص",closed:"مجال مغلق"};
+const store={get(k,d){try{const v=localStorage.getItem("ab_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("ab_"+k,JSON.stringify(v))}catch(e){}}};
+const dayStr=d=>d.toISOString().slice(0,10);
+const today=()=>dayStr(new Date());
+const cap=(a,n)=>{if(a.length>n)a.splice(0,a.length-n);return a};
+
+function aggregate(d){
+ const t=today(), by=(arr,k)=>arr.reduce((m,x)=>(m[x[k]]=(m[x[k]]||0)+1,m),{});
+ const days=[...Array(14)].map((_,i)=>dayStr(new Date(Date.now()-(13-i)*864e5)));
+ const vd=by(d.views,"day"), pg=by(d.views,"page"), fq=by(d.searches.filter(s=>s.faq_id),"faq_id");
+ const top=(m,key,n)=>Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([k,v])=>({[key]:k,n:v}));
+ return {members_total:d.members.length,members_by_role:by(d.members,"role"),views_total:d.views.length,views_today:vd[t]||0,
+  views_by_day:days.map(x=>({day:x,n:vd[x]||0})),top_pages:top(pg,"page",8),search:by(d.searches,"outcome"),top_faq:top(fq,"faq_id",5)};
+}
+
+const DemoAPI={
+ async init(){},
+ async session(){return store.get("me",null)},
+ async register(p){const ms=store.get("members",[]);if(ms.some(x=>x.email===p.email))return{ok:false,msg:"هذا البريد مسجّل من قبل. استخدم «لديّ حساب»."};
+   const m={...p,id:"demo-"+Date.now(),created_at:new Date().toISOString(),is_admin:false};ms.push(m);store.set("members",ms);store.set("me",m);return{ok:true}},
+ async login(email){const m=store.get("members",[]).find(x=>x.email===email);if(m){store.set("me",m);return{ok:true}}return{ok:false,msg:"لا يوجد عضو بهذا البريد في هذه المعاينة."}},
+ async logout(){store.set("me",null)},
+ async updateProfile(p){const me=store.get("me",null);if(!me)return;const n={...me,...p};store.set("me",n);store.set("members",store.get("members",[]).map(x=>x.id===n.id?n:x))},
+ async deleteAccount(){const me=store.get("me",null);if(!me)return;store.set("members",store.get("members",[]).filter(x=>x.id!==me.id));store.set("me",null)},
+ async track(page){store.set("views",cap([...store.get("views",[]),{day:today(),page}],5000))},
+ async publicStats(){const v=store.get("views",[]);return{views_total:v.length,views_today:v.filter(x=>x.day===today()).length,members:store.get("members",[]).length}},
+ async logSearch(domain,outcome,faq_id){store.set("searches",cap([...store.get("searches",[]),{day:today(),domain,outcome,faq_id:faq_id||null}],5000))},
+ async report(r){store.set("reports",cap([...store.get("reports",[]),{...r,status:"open",created_at:new Date().toISOString()}],500))},
+ async adminStats(){return aggregate({members:store.get("members",[]),views:store.get("views",[]),searches:store.get("searches",[])})},
+ async members(){return store.get("members",[]).slice().reverse()},
+ async reports(){return store.get("reports",[]).slice().reverse()},
+};
+
+let sb=null;
+const LiveAPI={
+ async init(){
+  await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)});
+  sb=window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
+  sb.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_IN"&&/access_token|type=/.test(location.hash))location.hash="account";setTimeout(refreshMe,0)});
+ },
+ async session(){const{data:{session}}=await sb.auth.getSession();if(!session)return null;
+   const{data}=await sb.from("members").select("*").eq("id",session.user.id).maybeSingle();
+   return{...(data||{id:session.user.id,full_name:"",role:"interested",interests:[]}),email:session.user.email}},
+ async register(p){const{error}=await sb.auth.signInWithOtp({email:p.email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true,data:{full_name:p.full_name,role:p.role,country:p.country,interests:p.interests}}});
+   return error?{ok:false,msg:"تعذّر الإرسال: "+error.message}:{ok:true,sent:true}},
+ async login(email){const{error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:false}});
+   return error?{ok:false,msg:"تعذّر الإرسال. تأكد من البريد، أو سجّل عضوية جديدة."}:{ok:true,sent:true}},
+ async logout(){await sb.auth.signOut()},
+ async updateProfile(p){await sb.from("members").update({full_name:p.full_name,role:p.role,country:p.country,interests:p.interests}).eq("id",ME.id)},
+ async deleteAccount(){const{error}=await sb.rpc("delete_my_account");if(error)throw error;await sb.auth.signOut()},
+ async track(page){await sb.from("page_views").insert({page})},
+ async publicStats(){const{data}=await sb.rpc("public_stats");return data},
+ async logSearch(domain,outcome,faq_id){await sb.from("search_logs").insert({domain,outcome,faq_id:faq_id||null})},
+ async report(r){await sb.from("reports").insert({type:r.type,location:r.where,note:r.note})},
+ async adminStats(){const{data,error}=await sb.rpc("admin_stats");if(error)throw error;return data},
+ async members(){const{data}=await sb.from("members").select("*").order("created_at",{ascending:false}).limit(300);return data||[]},
+ async reports(){const{data}=await sb.from("reports").select("*").order("created_at",{ascending:false}).limit(200);return(data||[]).map(x=>({...x,where:x.location}))},
+};
+
+let API=LIVE?LiveAPI:DemoAPI;
+let ME; // undefined = still checking, null = signed out
+const READY=(async()=>{try{await API.init()}catch(e){console.warn("Backend unavailable — preview mode",e);API=DemoAPI;LIVE=false}})();
+async function refreshMe(){await READY;try{ME=await API.session()}catch(e){ME=null}updateHeader();if(["account","admin","join"].includes(lastV))render()}
+function updateHeader(){const b=$("#joinBtn");if(!b)return;if(ME){b.textContent="حسابي";b.href="#account"}else{b.textContent="انضم إلينا";b.href="#join"}}
+async function updateCounter(){await READY;try{const s=await API.publicStats();if(!s)return;
+  $("#counter").innerHTML=`<span>زيارات اليوم <b>${s.views_today}</b></span><span>إجمالي الزيارات <b>${s.views_total}</b></span><span>الأعضاء <b>${s.members}</b></span>${LIVE?"":"<span>(معاينة: أرقام هذا المتصفح)</span>"}`}catch(e){}}
+const safe=p=>READY.then(p).catch(()=>{});
+const previewNote=()=>LIVE?"":`<div class="notice-box">وضع المعاينة: التسجيل يعمل تجريبيًا وتبقى البيانات في متصفحك فقط. التسجيل الفعلي يبدأ مع نقل المنصة إلى الاستضافة وربط قاعدة البيانات.</div>`;
+
+/* ---------- JOIN / ACCOUNT ---------- */
+let joinTab="new", joinSent=null;
+const interestsChecks=(sel=[])=>`<div class="checks">${DOMAINS.map(d=>`<label><input type="checkbox" name="interest" value="${d.k}" ${sel.includes(d.k)?"checked":""}>${d.t}</label>`).join("")}</div>`;
+const roleSelect=(id,v="interested")=>`<select id="${id}">${Object.entries(ROLE_LABEL).map(([k,l])=>`<option value="${k}" ${k===v?"selected":""}>${l}</option>`).join("")}</select>`;
+const countrySelect=(id,v="المغرب")=>`<select id="${id}">${COUNTRIES.map(c=>`<option ${c===v?"selected":""}>${c}</option>`).join("")}</select>`;
+V.join=()=>{
+ if(ME) return `<section class="view"><div class="stack"><div class="eyebrow">العضوية</div><h1>أنت عضو بالفعل</h1><div class="btns"><a class="btn btn-p" href="#account">حسابي</a></div></div></section>`;
+ const sent=joinSent?`<div class="ok-box"><b>أرسلنا رابط ${joinSent.type==="new"?"التفعيل":"الدخول"} إلى ${esc(joinSent.email)}</b><span>افتح بريدك واضغط الرابط لإكمال ${joinSent.type==="new"?"التسجيل":"الدخول"}. لا نستخدم كلمات مرور.</span></div>`:"";
+ return `<section class="view">
+ <div class="stack"><div class="eyebrow">العضوية مجانية</div><h1>انضم إلى على بصيرة</h1>
+  <p class="lead">سجّل اهتماماتك لنعرف أولوياتك، وشارك في تجربة الباحث وتقييمه، وتابع الأقسام الجديدة عند إطلاقها.</p></div>
+ ${previewNote()}
+ <div class="two">
+  <div class="stack">
+   <div class="seg" role="group" aria-label="نوع الدخول"><button type="button" data-jtab="new" aria-pressed="${joinTab==="new"}">عضو جديد</button><button type="button" data-jtab="login" aria-pressed="${joinTab==="login"}">لديّ حساب</button></div>
+   ${sent}
+   ${joinTab==="new"?`<form class="form" id="joinForm" novalidate>
+     <label for="jName">الاسم</label><input id="jName" autocomplete="name" required maxlength="80" placeholder="الاسم كما تحب أن يظهر">
+     <label for="jEmail">البريد الإلكتروني</label><input id="jEmail" type="email" autocomplete="email" required dir="ltr" placeholder="name@example.com">
+     <label for="jRole">الصفة</label>${roleSelect("jRole")}
+     <label for="jCountry">البلد</label>${countrySelect("jCountry")}
+     <label>المجالات التي تهمك</label>${interestsChecks(["sira"])}
+     <label class="row-check"><input type="checkbox" id="jConsent">أوافق على <a href="#policies">سياسة الخصوصية</a> وعلى حفظ هذه البيانات لغرض العضوية فقط.</label>
+     <p class="ref" id="jErr" role="alert"></p>
+     <button class="btn btn-p" type="submit">أنشئ عضويتي</button>
+   </form>`:`<form class="form" id="loginForm2" novalidate>
+     <label for="lEmail">البريد الإلكتروني</label><input id="lEmail" type="email" autocomplete="email" required dir="ltr" placeholder="name@example.com">
+     <p class="ref" id="lErr" role="alert"></p>
+     <button class="btn btn-p" type="submit">${LIVE?"أرسل رابط الدخول":"ادخل"}</button>
+     <p class="ref">نرسل رابط دخول إلى بريدك بدل كلمة المرور.</p>
+   </form>`}
+  </div>
+  <aside class="side"><div class="card"><h3>ماذا نحفظ ولماذا؟</h3>
+   <ul style="margin:0;padding-inline-start:18px;font-size:13.5px;display:grid;gap:4px">
+    <li>الاسم والبريد: للتعريف بالعضو وإرسال رابط الدخول.</li><li>الصفة والبلد والمجالات: لترتيب أولويات المحتوى.</li>
+    <li>لا نحفظ أسئلتك في الباحث ولا محادثاتك.</li><li>تستطيع تعديل بياناتك أو حذف حسابك في أي وقت من «حسابي».</li></ul></div></aside>
+ </div></section>`};
+
+let delArm=false;
+V.account=()=>{
+ if(ME===undefined) return `<section class="view"><p class="ref">جارٍ التحقق من الحساب…</p></section>`;
+ if(!ME) return `<section class="view"><div class="stack"><div class="eyebrow">حسابي</div><h1>لم تسجّل الدخول بعد</h1>
+   <div class="btns"><a class="btn btn-p" href="#join" data-jtab-link="new">انضم إلينا</a><a class="btn btn-s" href="#join" data-jtab-link="login">لديّ حساب</a></div></div></section>`;
+ return `<section class="view">
+ <div style="display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap"><div class="stack"><div class="eyebrow">حسابي</div><h1>أهلًا ${esc(ME.full_name||"")}</h1></div><button class="btn btn-s btn-sm" id="signout" type="button">تسجيل الخروج</button></div>
+ ${previewNote()}
+ <div class="two">
+  <form class="form" id="accForm">
+   <label for="aName">الاسم</label><input id="aName" value="${esc(ME.full_name||"")}" maxlength="80">
+   <label>البريد</label><input value="${esc(ME.email||"")}" disabled dir="ltr">
+   <label for="aRole">الصفة</label>${roleSelect("aRole",ME.role)}
+   <label for="aCountry">البلد</label>${countrySelect("aCountry",ME.country)}
+   <label>المجالات التي تهمك</label>${interestsChecks(ME.interests||[])}
+   <button class="btn btn-p" type="submit">احفظ التعديلات</button>
+  </form>
+  <aside class="side">
+   <div class="card"><h3>عضويتك</h3><dl class="fields"><div><dt>تاريخ الانضمام</dt><dd>${ME.created_at?new Date(ME.created_at).toLocaleDateString("ar-MA"):"—"}</dd></div><div><dt>الصفة</dt><dd>${ROLE_LABEL[ME.role]||"—"}</dd></div></dl></div>
+   <div class="card"><h3>حذف الحساب</h3><p style="font-size:13.5px;color:var(--ink-2)">يحذف بياناتك نهائيًا من المنصة.</p>
+    <button class="btn btn-s btn-sm" id="delAcc" type="button">${delArm?"اضغط مرة أخرى للتأكيد":"احذف حسابي"}</button></div>
+  </aside>
+ </div></section>`};
+
+/* ---------- ADMIN ---------- */
+let authed=false;
+V.admin=()=>{
+ if(LIVE){
+  if(ME===undefined) return `<section class="view"><p class="ref">جارٍ التحقق من الصلاحيات…</p></section>`;
+  if(!ME?.is_admin) return `<section class="view"><div class="stack"><div class="eyebrow">الإدارة العلمية</div><h1>هذه الصفحة للمشرفين</h1>
+   <p class="lead">سجّل الدخول بحساب له صلاحية الإشراف.</p><div class="btns"><a class="btn btn-p" href="#join" data-jtab-link="login">تسجيل الدخول</a></div></div></section>`;
+ } else if(!authed) return `<section class="view"><div class="stack"><div class="eyebrow">الإدارة العلمية</div><h1>تسجيل الدخول</h1></div>
+  <form class="form" id="loginForm"><label for="u">اسم المستخدم</label><input id="u" value="editor"><label for="p">كلمة المرور</label><input id="p" type="password" value="demo"><button class="btn btn-p" type="submit">دخول</button><p class="ref">وضع المعاينة: أي بيانات تعمل. بعد الإطلاق يدخل المشرف بحسابه.</p></form></section>`;
+ const all=[...ITEMS,...FAQ.map(f=>({id:f.id,type:"سؤال وجواب",title:f.q,status:f.status,ver:1,editor:"—"}))];
+ const c=s=>all.filter(i=>i.status===s).length;
+ return `<section class="view">
+  <div style="display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap"><div class="stack"><div class="eyebrow">الإدارة العلمية</div><h1>لوحة المنصة</h1></div><button class="btn btn-s btn-sm" id="logout">خروج</button></div>
+  ${LIVE?"":`<div class="notice-box">وضع المعاينة: الإحصاءات أدناه من هذا المتصفح فقط. بعد ربط قاعدة البيانات تظهر أرقام كل الزوار.</div>`}
+  <div id="adminStats" class="stack"><p class="ref">جارٍ تحميل الإحصاءات…</p></div>
+  <div class="stack"><h2>الأعضاء</h2><div id="adminMembers"><p class="ref">جارٍ التحميل…</p></div></div>
+  <div class="stack"><h2>قاعدة المحتوى</h2>
+  <div class="kpis"><div class="kpi"><b>${c("draft")}</b><span>مسودة</span></div><div class="kpi"><b>${c("review")}</b><span>تحت التحقق</span></div><div class="kpi"><b>${c("pub")}</b><span>منشور</span></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>المعرّف</th><th>النوع</th><th>العنوان</th><th>الحالة</th><th>النسخة</th><th>الإجراء</th></tr></thead><tbody>
+   ${all.map(i=>`<tr><td class="num">${i.id}</td><td>${i.type}</td><td>${esc(i.title)}</td><td>${pill(i.status)}</td><td class="num">${i.ver}</td>
+    <td><select data-status="${i.id}" aria-label="تغيير حالة ${i.id}">${["draft","review","pub"].map(s=>`<option value="${s}" ${s===i.status?"selected":""}>${STATUS_LABEL[s]}</option>`).join("")}</select></td></tr>`).join("")}
+  </tbody></table></div></div>
+  <div class="two">
+   <div class="stack"><h2>البلاغات</h2><div id="adminReports"><p class="ref">جارٍ التحميل…</p></div></div>
+   <div class="stack"><h2>سجل التصحيح</h2><div class="log">${LOG.slice().reverse().map(l=>`<div><span class="tag">${l.t}</span> ${esc(l.m)}</div>`).join("")}</div></div>
+  </div>
+ </section>`};
+
+async function loadAdmin(){
+ const box=$("#adminStats"); if(!box) return;
+ try{
+  await READY; const [s,ms,rs]=await Promise.all([API.adminStats(),API.members(),API.reports()]);
+  if(!$("#adminStats")) return;
+  const max=Math.max(1,...s.views_by_day.map(d=>d.n)), t=today();
+  const sr=s.search||{}, stot=Object.values(sr).reduce((a,b)=>a+b,0);
+  const pmax=Math.max(1,...s.top_pages.map(p=>p.n));
+  const faqT=id=>(FAQ.find(f=>f.id===id)||{}).q||id;
+  $("#adminStats").innerHTML=`
+   <div class="kpis">
+    <div class="kpi"><b>${s.members_total}</b><span>عضو مسجّل</span></div>
+    <div class="kpi"><b>${s.views_today}</b><span>زيارة اليوم</span></div>
+    <div class="kpi"><b>${s.views_total}</b><span>إجمالي الزيارات</span></div>
+    <div class="kpi"><b>${stot}</b><span>بحث في الباحث (30 يومًا)</span></div>
+    <div class="kpi"><b>${rs.filter(r=>r.status!=="done").length}</b><span>بلاغ مفتوح</span></div>
+   </div>
+   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+    <div class="card"><h3>الزيارات — آخر 14 يومًا</h3>
+     <div class="bars">${s.views_by_day.map(d=>`<div class="bar${d.day===t?" today":""}" title="${d.day}: ${d.n}"><em>${d.n||""}</em><i style="height:${Math.round(d.n/max*100)}%"></i><small>${+d.day.slice(8)}</small></div>`).join("")}</div></div>
+    <div class="card"><h3>نتائج الباحث</h3>
+     ${stot?`<div class="stackbar">${["hit","miss","guard","closed"].map(k=>sr[k]?`<span class="c-${k}" style="width:${sr[k]/stot*100}%"></span>`:"").join("")}</div>
+     <div class="legend">${["hit","miss","guard","closed"].map(k=>`<span><i class="c-${k}"></i>${OUT_LABEL[k]} ${sr[k]||0} (${Math.round((sr[k]||0)/stot*100)}%)</span>`).join("")}</div>
+     <p class="ref">نسبة «لا يوجد سند» تدلّك على الأسئلة التي يحتاج البنك إلى إضافتها.</p>
+     ${s.top_faq.length?`<div class="hlist">${s.top_faq.map(f=>`<div><span>${esc(faqT(f.faq_id))}</span><b>${f.n}</b></div>`).join("")}</div>`:""}`:`<p class="ref">لا توجد عمليات بحث بعد. جرّب الباحث ثم ارجع هنا.</p>`}</div>
+    <div class="card"><h3>أكثر الصفحات زيارة</h3>
+     ${s.top_pages.length?`<div class="hlist">${s.top_pages.map(p=>`<div><span>${PAGE_LABEL[p.page]||esc(p.page)}</span><b>${p.n}</b><div class="track"><span style="width:${p.n/pmax*100}%"></span></div></div>`).join("")}</div>`:`<p class="ref">لا توجد زيارات بعد.</p>`}</div>
+    <div class="card"><h3>الأعضاء حسب الصفة</h3>
+     ${s.members_total?`<div class="hlist">${Object.entries(ROLE_LABEL).map(([k,l])=>{const n=(s.members_by_role||{})[k]||0;return `<div><span>${l}</span><b>${n}</b><div class="track"><span style="width:${n/s.members_total*100}%"></span></div></div>`}).join("")}</div>`:`<p class="ref">لا يوجد أعضاء بعد.</p>`}</div>
+   </div>`;
+  $("#adminMembers").innerHTML=ms.length?`<div class="tbl-wrap"><table><thead><tr><th>الاسم</th><th>البريد</th><th>الصفة</th><th>البلد</th><th>المجالات</th><th>تاريخ الانضمام</th></tr></thead><tbody>
+   ${ms.map(m=>`<tr><td>${esc(m.full_name||"—")}</td><td dir="ltr" style="text-align:end">${esc(m.email||"—")}</td><td>${ROLE_LABEL[m.role]||"—"}</td><td>${esc(m.country||"—")}</td><td>${(m.interests||[]).map(k=>`<span class="tag">${(DOMAINS.find(d=>d.k===k)||{t:k}).t}</span>`).join(" ")}</td><td class="num">${m.created_at?m.created_at.slice(0,10):"—"}</td></tr>`).join("")}
+   </tbody></table></div>`:`<p class="ref">لا يوجد أعضاء بعد. يظهر هنا كل من يسجّل من صفحة «انضم إلينا».</p>`;
+  $("#adminReports").innerHTML=rs.length?`<div class="tbl-wrap"><table><thead><tr><th>النوع</th><th>الموضع</th><th>الوصف</th><th>التاريخ</th></tr></thead><tbody>${rs.map(r=>`<tr><td>${esc(r.type)}</td><td>${esc(r.where||"—")}</td><td>${esc(r.note||"—")}</td><td class="num">${(r.created_at||"").slice(0,10)}</td></tr>`).join("")}</tbody></table></div>`:`<p class="ref">لا توجد بلاغات. البلاغات المرسلة من صفحة السياسات أو من الباحث تظهر هنا.</p>`;
+ }catch(e){box.innerHTML=`<div class="limit">تعذّر تحميل الإحصاءات. تأكد من تشغيل ملف قاعدة البيانات ومن صلاحية حساب المشرف.</div>`}
+}
+
+/* ===================== ROUTER & EVENTS ===================== */
+const TICKER=[
+ {b:"جديد",t:"«أسوتي» متاح الآن في نسخة تجريبية",h:"#oswati",i:"palm",g:1},
+ {b:"الباحث الشرعي",t:"كل جواب يُعرض بنصه ومصدره وموضعه",h:"#bahith",i:"search"},
+ {b:"أسوتي",t:"خمسة مواقف نبوية تُستخرج منها عشر مهارات حياتية",h:"#oswati",i:"steps",g:1},
+ {b:"الشمائل",t:"خمس مواد من الشمائل المحمدية مع تخريجها",h:"#oswati",i:"flower"},
+ {b:"اسأل أسوتي",t:"بنك أولي من عشرة أسئلة وأجوبة موثقة",h:"#bahith",i:"ask",g:1},
+ {b:"للأستاذ",t:"بنك وضعيات وأنشطة للتدريس والتكوين الشرعي",h:"#teaching",i:"rehal"},
+ {b:"قريبًا",t:"القرآن الكريم وعلومه · الحديث النبوي · الفقه وأصوله",h:"#home",i:"books",g:1},
+ {b:"منهجنا",t:"بحث وتعليم من مصادر معلومة، لا فتوى شخصية",h:"#about",i:"scroll"},
+ {b:"خصوصيتك",t:"لا تُحفظ محادثاتك، والبلاغات بلا بيانات شخصية",h:"#policies",i:"shield",g:1},
+];
+const tkHTML=TICKER.map(x=>`<li><a href="${x.h}"><span class="ti${x.g?" g":""}" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[x.i]}</svg></span><b>${x.b}</b>${x.t}</a></li>`).join("");
+$("#tk1").innerHTML=tkHTML; $("#tk2").innerHTML=tkHTML.replace(/<a /g,'<a tabindex="-1" ');
+
+function fx(changed){
+ const app=$("#app"); app.classList.toggle("still",!changed);
+ if(!changed) return;
+ app.querySelectorAll("h1").forEach(h=>{let i=0;
+  const walk=n=>[...n.childNodes].forEach(c=>{
+   if(c.nodeType===3){const frag=document.createDocumentFragment();
+     c.textContent.split(/(\s+)/).forEach(p=>{if(!p)return; if(/^\s+$/.test(p)){frag.append(p);return}
+       const s=document.createElement("span");s.className="w";s.style.setProperty("--i",i++);s.textContent=p;frag.append(s)});
+     c.replaceWith(frag)}
+   else if(c.nodeType===1) walk(c)});
+  walk(h)});
+ app.querySelectorAll(".grid,.timeline,.kpis,.rules,.sugg").forEach(g=>[...g.children].forEach((c,i)=>c.style.setProperty("--i",i)));
+}
+
+const ROUTES=["home","oswati","bahith","teaching","about","policies","join","account","admin"];
+let lastV=null,forceAnim=false;
+function render(){
+ const r=(location.hash||"#home").slice(1); const v=ROUTES.includes(r)?r:"home";
+ const entered=v!==lastV, changed=entered||forceAnim; lastV=v; forceAnim=false;
+ $("#app").innerHTML=V[v](); fx(changed);
+ document.querySelectorAll("#nav a").forEach(a=>a.setAttribute("aria-current",a.getAttribute("href")==="#"+v?"page":"false"));
+ const log=$("#log"); if(log) log.scrollTop=log.scrollHeight;
+ if(v==="admin") loadAdmin();
+ if(entered && v!=="admin") safe(()=>API.track(v)).then(updateCounter);
+}
+addEventListener("hashchange",()=>{if(!/access_token|type=/.test(location.hash)){render();scrollTo(0,0)}});
+function ask(q){
+ if(!q.trim())return; const d=$("#dom")?.value||"sira";
+ const a=answer(q,d); chat.push({u:q}); chat.push({a});
+ safe(()=>API.logSearch(d,a.kind,a.f?.id)); // outcome only — the question text is never stored
+ const keep=d; render(); if($("#dom")) $("#dom").value=keep;
+}
+const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+const pickedInterests=f=>[...f.querySelectorAll('input[name="interest"]:checked')].map(x=>x.value);
+document.addEventListener("click",async e=>{
+ const t=e.target.closest("[data-otab],[data-ask],[data-report],[data-goto-tab],[data-jtab],[data-jtab-link],#logout,#signout,#delAcc"); if(!t)return;
+ if(t.dataset.otab){oTab=t.dataset.otab;forceAnim=true;render()}
+ else if(t.dataset.ask){ask(t.dataset.ask)}
+ else if(t.dataset.report){t.disabled=true;t.textContent="سُجّل البلاغ";await safe(()=>API.report({type:"خطأ في جواب الباحث",where:t.dataset.report,note:"بلاغ من واجهة الباحث"}));toast("سُجّل البلاغ دون بيانات شخصية")}
+ else if(t.dataset.gotoTab){oTab=t.dataset.gotoTab}
+ else if(t.dataset.jtab){joinTab=t.dataset.jtab;joinSent=null;render()}
+ else if(t.dataset.jtabLink){joinTab=t.dataset.jtabLink;joinSent=null}
+ else if(t.id==="logout"){if(LIVE){await API.logout();ME=null;updateHeader();location.hash="home"}else{authed=false;render()}}
+ else if(t.id==="signout"){await safe(()=>API.logout());ME=null;delArm=false;updateHeader();toast("سجّلت الخروج");location.hash="home"}
+ else if(t.id==="delAcc"){
+   if(!delArm){delArm=true;render();setTimeout(()=>{if(delArm){delArm=false;if(lastV==="account")render()}},5000);return}
+   delArm=false;try{await API.deleteAccount();ME=null;updateHeader();updateCounter();toast("حُذف حسابك وبياناتك");location.hash="home"}catch(err){toast("تعذّر الحذف، حاول مرة أخرى")}}
+});
+document.addEventListener("submit",async e=>{
+ e.preventDefault(); const f=e.target;
+ if(f.id==="askForm"){const q=$("#q").value;ask(q)}
+ if(f.id==="loginForm"){authed=true;render()}
+ if(f.id==="repForm"){const r={type:$("#rType").value,where:$("#rWhere").value||"—",note:$("#rNote").value||"—"};f.reset();await safe(()=>API.report(r));toast("وصل البلاغ، شكرًا لك")}
+ if(f.id==="joinForm"){
+  const p={full_name:$("#jName").value.trim(),email:$("#jEmail").value.trim().toLowerCase(),role:$("#jRole").value,country:$("#jCountry").value,interests:pickedInterests(f)};
+  const err=$("#jErr");
+  if(p.full_name.length<2){err.textContent="اكتب اسمك (حرفان على الأقل).";$("#jName").focus();return}
+  if(!emailOk(p.email)){err.textContent="اكتب بريدًا إلكترونيًا صحيحًا، مثل name@example.com";$("#jEmail").focus();return}
+  if(!$("#jConsent").checked){err.textContent="يلزم الموافقة على سياسة الخصوصية لإنشاء العضوية.";return}
+  const btn=f.querySelector("button[type=submit]");btn.disabled=true;btn.textContent="جارٍ الإرسال…";
+  await READY; const res=await API.register(p).catch(()=>({ok:false,msg:"تعذّر الاتصال. حاول بعد قليل."}));
+  if(!res.ok){err.textContent=res.msg;btn.disabled=false;btn.textContent="أنشئ عضويتي";return}
+  if(res.sent){joinSent={type:"new",email:p.email};render()}
+  else{await refreshMe();updateCounter();toast("أهلًا بك عضوًا في على بصيرة");location.hash="account"}
+ }
+ if(f.id==="loginForm2"){
+  const email=$("#lEmail").value.trim().toLowerCase(), err=$("#lErr");
+  if(!emailOk(email)){err.textContent="اكتب بريدًا إلكترونيًا صحيحًا.";return}
+  await READY; const res=await API.login(email).catch(()=>({ok:false,msg:"تعذّر الاتصال. حاول بعد قليل."}));
+  if(!res.ok){err.textContent=res.msg;return}
+  if(res.sent){joinSent={type:"login",email};render()}
+  else{await refreshMe();toast("مرحبًا بعودتك");location.hash="account"}
+ }
+ if(f.id==="accForm"){
+  const p={full_name:$("#aName").value.trim(),role:$("#aRole").value,country:$("#aCountry").value,interests:pickedInterests(f)};
+  if(p.full_name.length<2){toast("اكتب اسمك (حرفان على الأقل)");return}
+  try{await API.updateProfile(p);await refreshMe();toast("حُفظت التعديلات")}catch(err){toast("تعذّر الحفظ، حاول مرة أخرى")}
+ }
+});
+document.addEventListener("change",e=>{
+ const s=e.target.dataset?.status; if(!s)return;
+ const it=ITEMS.find(i=>i.id===s)||FAQ.find(f=>f.id===s); const v=e.target.value;
+ if(it.status!==v){it.status=v; if(it.ver!==undefined) it.ver++; LOG.push({t:new Date().toISOString().slice(0,10),m:`${s}: تغيير الحالة إلى «${STATUS_LABEL[v]}»`}); toast(`${s} ← ${STATUS_LABEL[v]}`); render()}
+});
+$("#themeBtn").addEventListener("click",()=>{
+ const r=document.documentElement; const dark=r.dataset.theme? r.dataset.theme==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+ r.dataset.theme=dark?"light":"dark";
+});
+render();
+refreshMe();
+updateCounter();
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-copy]");if(!b)return;
+ try{await navigator.clipboard.writeText(b.dataset.copy);toast("نُسخ البريد")}
+ catch(err){const s=b.parentElement.querySelector(".email");if(s){const r=document.createRange();r.selectNodeContents(s);const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}toast("حدّدنا البريد، انسخه يدويًا")}});
+</script>
+
+</body>
+</html>
