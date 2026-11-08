@@ -262,6 +262,16 @@ footer .copy-btn{background:none;border:1px solid var(--line);border-radius:4px;
 .hlist .track{grid-column:1/-1;height:5px;border-radius:3px;background:var(--muted-soft);overflow:hidden}
 .hlist .track span{display:block;height:100%;background:var(--sage)}
 
+/* ---------- content editor ---------- */
+.cms-row{display:grid;grid-template-columns:110px minmax(0,1fr) 130px 100px auto;gap:6px;align-items:center}
+.cms-row.cms-dom{grid-template-columns:minmax(0,1fr) 180px}
+.cms-row input,.cms-row select,.cms-faq input,.cms-faq select,.cms-faq textarea{border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--sheet);width:100%;min-width:0;font:inherit}
+.cms-faq label{display:grid;gap:4px}
+details.cms-faq{border:1px solid var(--line);border-radius:8px;background:var(--sheet);padding:8px 12px}
+details.cms-faq summary{cursor:pointer;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+details.cms-faq[open] summary{margin-bottom:10px}
+@media (max-width:760px){.cms-row{grid-template-columns:1fr 1fr}.cms-row input[data-f="t"]{grid-column:1/-1}}
+
 /* ---------- motion (only when the viewer allows it) ---------- */
 @media (prefers-reduced-motion:no-preference){
   .ticker-track{animation:tick 50s linear infinite}
@@ -300,7 +310,7 @@ footer .copy-btn{background:none;border:1px solid var(--line);border-radius:4px;
 </style>
 
 <div dir="rtl" lang="ar">
-<div class="demo gut">نموذج أولي للعرض على المطور — المحتوى العلمي أمثلة تجريبية بانتظار مادة صاحبة المشروع المعتمدة</div>
+<div class="demo gut">نسخة تجريبية — المحتوى العلمي قيد الإعداد والمراجعة</div>
 
 <header class="top gut">
   <div class="wrap">
@@ -633,8 +643,9 @@ V.policies=()=>`<section class="view">
    - Filled CONFIG → live mode on Supabase (run supabase-setup.sql first).
    The anon key is public by design; Row Level Security in the SQL protects the data. */
 const CONFIG={
-  SUPABASE_URL:"",        // مثال: https://abcd1234.supabase.co
-  SUPABASE_ANON_KEY:"",   // Project Settings → API → anon public
+  SUPABASE_URL:"https://olgyykeechehwbiwwhfr.supabase.co",
+  // public anon key (safe in the browser; data is protected by Row Level Security)
+  SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sZ3l5a2VlY2hlaHdiaXd3aGZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxMDExNTIsImV4cCI6MjEwOTY3NzE1Mn0.GZyQbjskb-mTpI2C-1KrnUz8tgx-yXreX_adZCl-Cdo",
 };
 let LIVE=!!(CONFIG.SUPABASE_URL&&CONFIG.SUPABASE_ANON_KEY);
 const ROLE_LABEL={student:"طالب/ة",teacher:"أستاذ/ة",researcher:"باحث/ة",interested:"مهتم/ة"};
@@ -668,6 +679,8 @@ const DemoAPI={
  async publicStats(){const v=store.get("views",[]);return{views_total:v.length,views_today:v.filter(x=>x.day===today()).length,members:store.get("members",[]).length}},
  async logSearch(domain,outcome,faq_id){store.set("searches",cap([...store.get("searches",[]),{day:today(),domain,outcome,faq_id:faq_id||null}],5000))},
  async report(r){store.set("reports",cap([...store.get("reports",[]),{...r,status:"open",created_at:new Date().toISOString()}],500))},
+ async loadContent(){const m={};["ticker","domains","faq","items"].forEach(k=>{const v=store.get("content_"+k,null);if(v)m[k]=v});return m},
+ async saveContent(k,d){store.set("content_"+k,d)},
  async adminStats(){return aggregate({members:store.get("members",[]),views:store.get("views",[]),searches:store.get("searches",[])})},
  async members(){return store.get("members",[]).slice().reverse()},
  async reports(){return store.get("reports",[]).slice().reverse()},
@@ -678,6 +691,8 @@ const LiveAPI={
  async init(){
   await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)});
   sb=window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
+  // reachability check: hosts that block outside requests fall back to preview mode
+  await Promise.race([fetch(CONFIG.SUPABASE_URL+"/rest/v1/",{headers:{apikey:CONFIG.SUPABASE_ANON_KEY}}),new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),8000))]);
   sb.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_IN"&&/access_token|type=/.test(location.hash))location.hash="account";setTimeout(refreshMe,0)});
  },
  async session(){const{data:{session}}=await sb.auth.getSession();if(!session)return null;
@@ -694,6 +709,8 @@ const LiveAPI={
  async publicStats(){const{data}=await sb.rpc("public_stats");return data},
  async logSearch(domain,outcome,faq_id){await sb.from("search_logs").insert({domain,outcome,faq_id:faq_id||null})},
  async report(r){await sb.from("reports").insert({type:r.type,location:r.where,note:r.note})},
+ async loadContent(){const{data,error}=await sb.from("site_content").select("key,data");if(error)throw error;return Object.fromEntries((data||[]).map(r=>[r.key,r.data]))},
+ async saveContent(k,d,note){const{error}=await sb.from("site_content").upsert({key:k,data:d,updated_at:new Date().toISOString(),updated_by:ME?.id||null});if(error)throw error;await sb.from("content_log").insert({key:k,note:note||null,editor:ME?.id||null})},
  async adminStats(){const{data,error}=await sb.rpc("admin_stats");if(error)throw error;return data},
  async members(){const{data}=await sb.from("members").select("*").order("created_at",{ascending:false}).limit(300);return data||[]},
  async reports(){const{data}=await sb.from("reports").select("*").order("created_at",{ascending:false}).limit(200);return(data||[]).map(x=>({...x,where:x.location}))},
@@ -786,6 +803,7 @@ V.admin=()=>{
   <div style="display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap"><div class="stack"><div class="eyebrow">الإدارة العلمية</div><h1>لوحة المنصة</h1></div><button class="btn btn-s btn-sm" id="logout">خروج</button></div>
   ${LIVE?"":`<div class="notice-box">وضع المعاينة: الإحصاءات أدناه من هذا المتصفح فقط. بعد ربط قاعدة البيانات تظهر أرقام كل الزوار.</div>`}
   <div id="adminStats" class="stack"><p class="ref">جارٍ تحميل الإحصاءات…</p></div>
+  <div class="stack"><h2>إدارة المحتوى</h2><p class="ref">أي تعديل تحفظه هنا يظهر لكل الزوار فورًا${LIVE?"":" (في المعاينة: يظهر في هذا المتصفح فقط)"}.</p><div id="cmsBox"></div></div>
   <div class="stack"><h2>الأعضاء</h2><div id="adminMembers"><p class="ref">جارٍ التحميل…</p></div></div>
   <div class="stack"><h2>قاعدة المحتوى</h2>
   <div class="kpis"><div class="kpi"><b>${c("draft")}</b><span>مسودة</span></div><div class="kpi"><b>${c("review")}</b><span>تحت التحقق</span></div><div class="kpi"><b>${c("pub")}</b><span>منشور</span></div></div>
@@ -836,6 +854,72 @@ async function loadAdmin(){
  }catch(e){box.innerHTML=`<div class="limit">تعذّر تحميل الإحصاءات. تأكد من تشغيل ملف قاعدة البيانات ومن صلاحية حساب المشرف.</div>`}
 }
 
+
+/* ---------- CONTENT MANAGEMENT (dashboard) ---------- */
+const ICON_LABEL={palm:"نخلة",search:"بحث",steps:"درجات",flower:"وردة",ask:"سؤال",rehal:"رحل",books:"كتب",scroll:"وثيقة",shield:"درع"};
+const PAGES_OPT=()=>Object.entries(PAGE_LABEL).filter(([k])=>!["admin","account"].includes(k));
+let cmsTab="ticker", tkDraft=null, faqDraft=null;
+const clone=x=>JSON.parse(JSON.stringify(x));
+function applyContent(m){
+ if(Array.isArray(m.ticker)){TICKER.splice(0,TICKER.length,...m.ticker);renderTicker()}
+ if(m.domains&&typeof m.domains==="object") DOMAINS.forEach(d=>{if(m.domains[d.k])d.s=m.domains[d.k]});
+ if(Array.isArray(m.faq)) FAQ.splice(0,FAQ.length,...m.faq.map(f=>({...f,syn:Array.isArray(f.syn)?f.syn:[]})));
+ if(Array.isArray(m.items)) ITEMS.splice(0,ITEMS.length,...m.items);
+}
+async function loadContent(){await READY;try{const m=await API.loadContent();if(m&&Object.keys(m).length){applyContent(m);render()}}catch(e){}}
+const tkRow=(x,i)=>`<div class="cms-row" data-row="${i}">
+ <input aria-label="الشارة" data-f="b" value="${esc(x.b||"")}" maxlength="20" placeholder="الشارة">
+ <input aria-label="نص العنوان" data-f="t" value="${esc(x.t||"")}" maxlength="120" placeholder="نص العنوان">
+ <select aria-label="يفتح صفحة" data-f="h">${PAGES_OPT().map(([k,l])=>`<option value="#${k}" ${x.h==="#"+k?"selected":""}>${l}</option>`).join("")}</select>
+ <select aria-label="الصورة" data-f="i">${Object.keys(ICONS).map(k=>`<option value="${k}" ${x.i===k?"selected":""}>${ICON_LABEL[k]}</option>`).join("")}</select>
+ <button type="button" class="btn btn-s btn-sm" data-cms="tk-del" data-i="${i}">حذف</button></div>`;
+const collectTk=()=>[...document.querySelectorAll("#tkEd .cms-row")].map(r=>{const g=f=>r.querySelector(`[data-f="${f}"]`).value.trim();return{b:g("b"),t:g("t"),h:g("h"),i:g("i")}});
+const faqRow=(f,i)=>`<details class="cms-faq" data-row="${i}" ${f._open?"open":""}><summary><span class="tag">${esc(f.id)}</span> ${esc(f.q||"سؤال جديد")} ${pill(f.status||"draft")}</summary>
+ <div class="form" style="max-width:none">
+  <label>السؤال<input data-f="q" value="${esc(f.q||"")}" maxlength="200"></label>
+  <label>كلمات البحث المرادفة (افصل بفاصلة)<input data-f="syn" value="${esc((f.syn||[]).join("، "))}"></label>
+  <label>الخلاصة الموجزة<textarea data-f="sum" rows="2">${esc(f.sum||"")}</textarea></label>
+  <label>النص المستند إليه (آية أو حديث حرفيًا)<textarea data-f="quran" rows="2">${esc(f.quran||"")}</textarea></label>
+  <label>التوثيق (المصدر والموضع والرابط)<input data-f="ref" value="${esc(f.ref||"")}"></label>
+  <label>الشرح<textarea data-f="exp" rows="3">${esc(f.exp||"")}</textarea></label>
+  <label>الحالة<select data-f="status">${["draft","review","pub"].map(s=>`<option value="${s}" ${s===(f.status||"draft")?"selected":""}>${STATUS_LABEL[s]}</option>`).join("")}</select></label>
+  <div class="btns"><button type="button" class="btn btn-s btn-sm" data-cms="faq-del" data-i="${i}">حذف السؤال</button></div>
+ </div></details>`;
+const collectFaq=()=>[...document.querySelectorAll("#faqEd .cms-faq")].map((r,i)=>{const g=f=>r.querySelector(`[data-f="${f}"]`).value.trim();
+ const base=faqDraft[i]||{}; return{...base,_open:undefined,q:g("q"),syn:g("syn").split(/[،,]/).map(x=>x.trim()).filter(Boolean),sum:g("sum")||null,quran:g("quran")||null,ref:g("ref")||null,exp:g("exp")||null,status:g("status")}});
+function renderCMS(){
+ const box=$("#cmsBox"); if(!box) return;
+ if(!tkDraft) tkDraft=clone(TICKER); if(!faqDraft) faqDraft=clone(FAQ);
+ const tabs=[["ticker","الشريط المتحرك"],["domains","حالة المجالات"],["faq","بنك الأسئلة"]];
+ let body="";
+ if(cmsTab==="ticker") body=`<div class="stack" id="tkEd">${tkDraft.map(tkRow).join("")}</div>
+  <div class="btns"><button class="btn btn-s btn-sm" type="button" data-cms="tk-add">أضف عنوانًا</button><button class="btn btn-p btn-sm" type="button" data-cms="tk-save">احفظ الشريط</button></div>`;
+ else if(cmsTab==="domains") body=`<div class="stack" id="domEd">${DOMAINS.map(d=>`<div class="cms-row cms-dom"><span>${d.t}</span><select data-k="${d.k}" aria-label="حالة ${d.t}">${["ok","dev","intro"].map(s=>`<option value="${s}" ${d.s===s?"selected":""}>${STATUS_LABEL[s]}</option>`).join("")}</select></div>`).join("")}</div>
+  <div class="btns"><button class="btn btn-p btn-sm" type="button" data-cms="dom-save">احفظ حالة المجالات</button></div>`;
+ else body=`<p class="ref">الأسئلة المنشورة والمسودات كلها تظهر في الباحث، مع شارة الحالة. اكتب النص والتوثيق كما وردا في المصدر.</p><div class="stack" id="faqEd">${faqDraft.map(faqRow).join("")}</div>
+  <div class="btns"><button class="btn btn-s btn-sm" type="button" data-cms="faq-add">أضف سؤالًا</button><button class="btn btn-p btn-sm" type="button" data-cms="faq-save">احفظ بنك الأسئلة</button></div>`;
+ box.innerHTML=`<div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" type="button" aria-selected="${cmsTab===k}" data-ctab="${k}">${l}</button>`).join("")}</div><div class="stack" style="padding-top:14px">${body}</div>`;
+}
+document.addEventListener("click",async e=>{
+ const t=e.target.closest("[data-cms],[data-ctab]"); if(!t) return;
+ if(t.dataset.ctab){ if(cmsTab==="ticker"&&$("#tkEd")) tkDraft=collectTk(); if(cmsTab==="faq"&&$("#faqEd")) faqDraft=collectFaq(); cmsTab=t.dataset.ctab; renderCMS(); return }
+ const a=t.dataset.cms, done=m=>toast(LIVE?m+" — يظهر للزوار الآن":m+" (معاينة)");
+ try{
+  if(a==="tk-add"){tkDraft=collectTk();tkDraft.push({b:"جديد",t:"",h:"#home",i:"books"});renderCMS();const r=[...document.querySelectorAll("#tkEd .cms-row")].pop();r&&r.querySelector('[data-f="t"]').focus()}
+  if(a==="tk-del"){tkDraft=collectTk();tkDraft.splice(+t.dataset.i,1);renderCMS()}
+  if(a==="tk-save"){const d=collectTk().filter(x=>x.t);if(!d.length){toast("أضف عنوانًا واحدًا على الأقل");return}
+    t.disabled=true;await saveContentNow("ticker",d,"تحديث الشريط");TICKER.splice(0,TICKER.length,...d);tkDraft=clone(d);renderTicker();renderCMS();done("حُفظ الشريط")}
+  if(a==="dom-save"){const m={};document.querySelectorAll("#domEd select").forEach(s=>m[s.dataset.k]=s.value);
+    t.disabled=true;await saveContentNow("domains",m,"تحديث حالة المجالات");DOMAINS.forEach(d=>d.s=m[d.k]||d.s);renderCMS();done("حُفظت حالة المجالات")}
+  if(a==="faq-add"){faqDraft=collectFaq();const n=Math.max(0,...faqDraft.map(f=>+(String(f.id).match(/\d+/)||[0])[0]))+1;
+    faqDraft.push({id:"FAQ-"+String(n).padStart(2,"0"),q:"",syn:[],status:"draft",_open:true});renderCMS()}
+  if(a==="faq-del"){faqDraft=collectFaq();faqDraft.splice(+t.dataset.i,1);renderCMS()}
+  if(a==="faq-save"){const d=collectFaq().filter(f=>f.q).map(({_open,...f})=>f);
+    t.disabled=true;await saveContentNow("faq",d,"تحديث بنك الأسئلة");FAQ.splice(0,FAQ.length,...d);faqDraft=clone(d);renderCMS();done("حُفظ بنك الأسئلة")}
+ }catch(err){t.disabled=false;toast("تعذّر الحفظ. تأكد أنك داخل بحساب مشرف.")}
+});
+async function saveContentNow(k,d,note){await READY;await API.saveContent(k,d,note);LOG.push({t:today(),m:note})}
+
 /* ===================== ROUTER & EVENTS ===================== */
 const TICKER=[
  {b:"جديد",t:"«أسوتي» متاح الآن في نسخة تجريبية",h:"#oswati",i:"palm",g:1},
@@ -848,8 +932,11 @@ const TICKER=[
  {b:"منهجنا",t:"بحث وتعليم من مصادر معلومة، لا فتوى شخصية",h:"#about",i:"scroll"},
  {b:"خصوصيتك",t:"لا تُحفظ محادثاتك، والبلاغات بلا بيانات شخصية",h:"#policies",i:"shield",g:1},
 ];
-const tkHTML=TICKER.map(x=>`<li><a href="${x.h}"><span class="ti${x.g?" g":""}" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[x.i]}</svg></span><b>${x.b}</b>${x.t}</a></li>`).join("");
-$("#tk1").innerHTML=tkHTML; $("#tk2").innerHTML=tkHTML.replace(/<a /g,'<a tabindex="-1" ');
+function renderTicker(){
+ const tkHTML=TICKER.map((x,n)=>`<li><a href="${esc(x.h||"#home")}"><span class="ti${n%2===0?" g":""}" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[x.i]||ICONS.books}</svg></span><b>${esc(x.b||"")}</b>${esc(x.t||"")}</a></li>`).join("");
+ $("#tk1").innerHTML=tkHTML; $("#tk2").innerHTML=tkHTML.replace(/<a /g,'<a tabindex="-1" ');
+}
+renderTicker();
 
 function fx(changed){
  const app=$("#app"); app.classList.toggle("still",!changed);
@@ -873,7 +960,7 @@ function render(){
  $("#app").innerHTML=V[v](); fx(changed);
  document.querySelectorAll("#nav a").forEach(a=>a.setAttribute("aria-current",a.getAttribute("href")==="#"+v?"page":"false"));
  const log=$("#log"); if(log) log.scrollTop=log.scrollHeight;
- if(v==="admin") loadAdmin();
+ if(v==="admin"){renderCMS();loadAdmin()}
  if(entered && v!=="admin") safe(()=>API.track(v)).then(updateCounter);
 }
 addEventListener("hashchange",()=>{if(!/access_token|type=/.test(location.hash)){render();scrollTo(0,0)}});
@@ -933,7 +1020,7 @@ document.addEventListener("submit",async e=>{
 document.addEventListener("change",e=>{
  const s=e.target.dataset?.status; if(!s)return;
  const it=ITEMS.find(i=>i.id===s)||FAQ.find(f=>f.id===s); const v=e.target.value;
- if(it.status!==v){it.status=v; if(it.ver!==undefined) it.ver++; LOG.push({t:new Date().toISOString().slice(0,10),m:`${s}: تغيير الحالة إلى «${STATUS_LABEL[v]}»`}); toast(`${s} ← ${STATUS_LABEL[v]}`); render()}
+ if(it.status!==v){it.status=v; if(it.ver!==undefined) it.ver++; LOG.push({t:new Date().toISOString().slice(0,10),m:`${s}: تغيير الحالة إلى «${STATUS_LABEL[v]}»`}); toast(`${s} ← ${STATUS_LABEL[v]}`); render(); safe(()=>API.saveContent(FAQ.includes(it)?"faq":"items",FAQ.includes(it)?FAQ:ITEMS,`${s} → ${v}`))}
 });
 $("#themeBtn").addEventListener("click",()=>{
  const r=document.documentElement; const dark=r.dataset.theme? r.dataset.theme==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
@@ -942,6 +1029,7 @@ $("#themeBtn").addEventListener("click",()=>{
 render();
 refreshMe();
 updateCounter();
+loadContent();
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-copy]");if(!b)return;
  try{await navigator.clipboard.writeText(b.dataset.copy);toast("نُسخ البريد")}
  catch(err){const s=b.parentElement.querySelector(".email");if(s){const r=document.createRange();r.selectNodeContents(s);const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}toast("حدّدنا البريد، انسخه يدويًا")}});
