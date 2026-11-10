@@ -3,6 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="منصة عربية للمعرفة الشرعية من مصادرها: السيرة النبوية (أسوتي)، والباحث الشرعي، ومكتبة أبحاث ومقالات موثّقة.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="على بصيرة AI">
+<meta property="og:title" content="على بصيرة AI — المعرفة الشرعية من مصادرها">
+<meta property="og:description" content="أسوتي للسيرة النبوية، والباحث الشرعي، ومكتبة أبحاث ومقالات بمصادرها الموثّقة.">
+<meta property="og:url" content="https://ala-basira.github.io/">
+<meta property="og:image" content="https://ala-basira.github.io/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ar_AR">
+<meta name="twitter:card" content="summary_large_image">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -273,6 +284,11 @@ details.cms-faq summary{cursor:pointer;display:flex;gap:8px;align-items:center;f
 details.cms-faq[open] summary{margin-bottom:10px}
 @media (max-width:760px){.cms-row{grid-template-columns:1fr 1fr}.cms-row input[data-f="t"]{grid-column:1/-1}}
 
+/* ---------- home ask ---------- */
+.home-ask{display:flex;gap:8px;max-width:600px}
+.home-ask input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:11px 14px;background:var(--sheet);font-size:15px}
+.home-ask input:focus{border-color:var(--sage)}
+
 /* ---------- admin guidance ---------- */
 .qa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
 .qa{display:flex;gap:10px;align-items:center;text-align:start;background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;transition:border-color .2s,transform .2s}
@@ -521,7 +537,8 @@ V.home=()=>`
       <div class="eyebrow">منصة معرفية عربية</div>
       <h1>المعرفة الشرعية <mark class="hl">من مصادرها</mark>، بشرح واضح ومرجع يمكن التحقق منه</h1>
       <p class="lead">«على بصيرة» منصة للبحث والشرح والتعليم. كل جواب يُعرض مع نصه ومصدره وموضعه. وحين لا يوجد سند كافٍ نقول ذلك صراحة.</p>
-      <div class="btns"><a class="btn btn-p" href="#bahith">اسأل الباحث</a><a class="btn btn-s" href="#oswati">ادخل إلى أسوتي</a></div>
+      <form class="home-ask" id="homeAsk"><input id="homeQ" autocomplete="off" placeholder="اسأل عن السيرة… مثال: كيف كان النبي ﷺ يستشير أصحابه؟" aria-label="اسأل الباحث الشرعي"><button class="btn btn-p" type="submit">اسأل</button></form>
+      <div class="btns"><a class="btn btn-s" href="#oswati">ادخل إلى أسوتي</a><a class="btn btn-s" href="#library">تصفّح المكتبة</a></div>
     </div>
     <div class="hero-verse">
       <div class="ayah">قُلْ هَٰذِهِ سَبِيلِي أَدْعُو إِلَى اللَّهِ ۚ عَلَىٰ بَصِيرَةٍ أَنَا وَمَنِ اتَّبَعَنِي</div>
@@ -1323,6 +1340,7 @@ document.addEventListener("click",async e=>{
 document.addEventListener("submit",async e=>{
  e.preventDefault(); const f=e.target;
  if(f.id==="askForm"){const q=$("#q").value;ask(q)}
+ if(f.id==="homeAsk"){const q=$("#homeQ").value.trim();if(!q){$("#homeQ").focus();return}location.hash="bahith";setTimeout(()=>ask(q),60)}
  if(f.id==="loginForm"){authed=true;render()}
  if(f.id==="repForm"){const r={type:$("#rType").value,where:$("#rWhere").value||"—",note:$("#rNote").value||"—"};f.reset();await safe(()=>API.report(r));toast("وصل البلاغ، شكرًا لك")}
  if(f.id==="joinForm"){
