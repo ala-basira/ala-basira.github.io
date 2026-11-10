@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ala-basira.github.io/sitemap.xml
