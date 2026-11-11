@@ -553,7 +553,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const pill=s=>`<span class="pill ${s}">${STATUS_LABEL[s]}</span>`;
 const norm=s=>s.replace(/[ًٌٍَُِّْـ]/g,"").replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").toLowerCase();
 function toast(m){const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2400)}
-const ph=(f)=>`<span class="placeholder">[${f} — يُدخل من صاحبة المشروع]</span>`;
+const ph=(f)=>ME?.is_admin?`<span class="placeholder">[${f} — يُدخل من صاحبة المشروع]</span>`:`<span class="placeholder">قيد الإعداد</span>`;
 
 /* ===================== VIEWS ===================== */
 const V={};
@@ -565,7 +565,7 @@ V.home=()=>`
       <div class="eyebrow">منصة معرفية عربية</div>
       <h1>المعرفة الشرعية <mark class="hl">من مصادرها</mark>، بشرح واضح ومرجع يمكن التحقق منه</h1>
       <p class="lead">«على بصيرة» منصة للبحث والشرح والتعليم. كل جواب يُعرض مع نصه ومصدره وموضعه. وحين لا يوجد سند كافٍ نقول ذلك صراحة.</p>
-      <form class="home-ask" id="homeAsk"><input id="homeQ" autocomplete="off" placeholder="اسأل عن السيرة… مثال: كيف كان النبي ﷺ يستشير أصحابه؟" aria-label="اسأل الباحث الشرعي"><button class="btn btn-p" type="submit">اسأل</button></form>
+      <form class="home-ask" id="homeAsk"><input id="homeQ" autocomplete="off" placeholder="اسأل عن السيرة… مثال: من أرضع النبي ﷺ؟" aria-label="اسأل الباحث الشرعي"><button class="btn btn-p" type="submit">اسأل</button></form>
       <div class="btns"><a class="btn btn-s" href="#oswati">ادخل إلى أسوتي</a><a class="btn btn-s" href="#library">تصفّح المكتبة</a></div>
     </div>
     <div class="hero-verse">
@@ -573,6 +573,8 @@ V.home=()=>`
       <div class="ref">سورة يوسف، الآية 108</div>
     </div>
   </div>
+
+  ${siraHomeHTML()}
 
   <div class="stack">
     <div style="display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap">
@@ -620,8 +622,8 @@ const itemCard=(it,full)=>`<article class="card">
   <h3>${esc(it.title)}</h3>
   <div class="meta">${it.tags.map(t=>`<span class="tag">#${t}</span>`).join("")}</div>
   ${it.skills?`<p style="font-size:13.5px"><b>المهارات المستخرجة:</b> ${it.skills.join("، ")}</p>`:""}
-  <div class="src"><div class="label">النص الأصلي</div>${ph("النص حرفيًا")}</div>
-  ${full?`<dl class="fields">
+  ${!ME?.is_admin?`<p class="ref">المادة قيد الإعداد العلمي، وتُنشر بنصها ومصادرها بعد المراجعة.</p>`:`<div class="src"><div class="label">النص الأصلي</div>${ph("النص حرفيًا")}</div>`}
+  ${full&&ME?.is_admin?`<dl class="fields">
     <div><dt>ملخص السياق</dt><dd>${ph("الملخص")}</dd></div>
     <div><dt>التوثيق</dt><dd>${ph("الكتاب، المؤلف، الطبعة، الموضع")}</dd></div>
     <div><dt>حالة الثبوت</dt><dd>${ph("ملاحظة المتخصص")}</dd></div>
@@ -678,6 +680,7 @@ V.sira=arg=>{
    <div class="grid sira-grid">${cards.map(c=>`<a class="card sira-card" href="#sira-${st.id}-${c.n}"><div class="meta"><span class="sc-n">${pad2(c.n)}</span>${c.st!=="pub"?pill(c.st):""}</div><h3>${esc(c.t)}</h3><p>${esc(c.s)}</p><span class="go">اقرأ البطاقة ←</span></a>`).join("")}</div>
   </div>
   ${st.end?`<div class="stack"><h2>خاتمة المرحلة</h2><p class="sira-end">${qfmt(st.end)}</p></div>`:""}
+  ${prevStage(st)||nextStage(st)?`<nav class="sira-nav" aria-label="التنقل بين المراحل">${prevStage(st)?`<a class="btn btn-s btn-sm" href="#sira-${prevStage(st).id}">→ المرحلة السابقة: ${esc(prevStage(st).h||prevStage(st).t)}</a>`:"<span></span>"}${nextStage(st)?`<a class="btn btn-s btn-sm" href="#sira-${nextStage(st).id}">المرحلة التالية: ${esc(nextStage(st).h||nextStage(st).t)} ←</a>`:""}</nav>`:""}
   ${shareRow("sira-"+st.id,st.h||st.t)}
   ${ME?.is_admin&&st.note?`<div class="limit"><b>ملاحظة للمراجعة (تظهر للمشرف فقط):</b> ${esc(st.note)}</div>`:""}
  </section>`};
@@ -691,22 +694,30 @@ function siraCardView(st,cards,n){
   ${c.s?`<p class="lead">${esc(c.s)}</p>`:""}
   <div class="reader-body">${(c.b||[]).map(p=>`<p>${qfmt(p)}</p>`).join("")}</div>
   ${(c.r||[]).length?`<div class="src"><div class="label">المصادر والمراجع</div><ul class="refs">${c.r.map(x=>`<li>${x.u?`<a href="${esc(safeUrl(x.u))}" target="_blank" rel="noopener">${esc(x.t)}</a>`:esc(x.t)}</li>`).join("")}</ul></div>`:""}
-  <nav class="sira-nav" aria-label="التنقل بين البطاقات">${prev?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${prev.n}">→ ${esc(prev.t)}</a>`:"<span></span>"}${next?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${next.n}">${esc(next.t)} ←</a>`:`<a class="btn btn-s btn-sm" href="#sira-${st.id}">كل بطاقات المرحلة</a>`}</nav>
+  <nav class="sira-nav" aria-label="التنقل بين البطاقات">${prev?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${prev.n}">→ ${esc(prev.t)}</a>`:"<span></span>"}${next?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${next.n}">${esc(next.t)} ←</a>`:nextStage(st)?`<a class="btn btn-p btn-sm" href="#sira-${nextStage(st).id}">المرحلة التالية: ${esc(nextStage(st).h||nextStage(st).t)} ←</a>`:`<a class="btn btn-s btn-sm" href="#sira-${st.id}">كل بطاقات المرحلة</a>`}</nav>
   ${shareRow("sira-"+st.id+"-"+c.n,c.t)}
  </article></section>`}
+const STOP=new Set(["من","ما","ماذا","كيف","متي","لماذا","هل","عن","في","علي","الي","او","ثم","التي","الذي","كان","كانت","النبي","رسول","الرسول","الله","صلي","عليه","وسلم","محمد","قصه","حدثني","اريد","اعرف","معني","هو","هي","مع","بعد","قبل"]);
+const stem=w=>{let x=w.replace(/^(وال|بال|كال|فال|لل|ال)/,"");if(x.length<3)x=w;let y=x.replace(/(ها|هم|ات|ون|ين|ه)$/,"");return y.length>=3?y:x};
+const qWords=q=>norm(q).replace(/[^\u0621-\u064Aa-z0-9\s]/g," ").split(/\s+/).filter(w=>w.length>1&&!STOP.has(w)).map(stem).filter(w=>w.length>=2);
 function siraMatch(qRaw){
- const words=norm(qRaw).split(/\s+/).filter(w=>w.length>2); if(!words.length) return [];
- const out=[]; SIRA.forEach(st=>stageCards(st).forEach(c=>{const hay=norm(c.t+" "+c.s+" "+(c.b||[]).join(" "));
-  let s=0; for(const w of words){ if(norm(c.t).includes(w)) s+=2; else if(hay.includes(w)) s+=1 } if(s>=2) out.push([st,c,s])}));
- return out.sort((a,b)=>b[2]-a[2]).slice(0,3);
+ const words=qWords(qRaw); if(!words.length) return [];
+ const out=[]; SIRA.forEach(st=>stageCards(st).forEach(c=>{const T=norm(c.t),S=norm(c.s||""),B=norm((c.b||[]).join(" "));
+  let s=0; for(const w of words){ if(T.includes(w)) s+=3; else if(S.includes(w)) s+=2; else if(B.includes(w)) s+=1 } if(s>=(words.length===1?1:2)) out.push([st,c,s])}));
+ return out.sort((a,b)=>b[2]-a[2]).slice(0,4);
 }
+function bestPara(c,qRaw){const words=qWords(qRaw);let best=(c.b||[])[0]||"",bs=-1;(c.b||[]).forEach(p=>{const h=norm(p);const s=words.filter(w=>h.includes(w)).length;if(s>bs){bs=s;best=p}});return best}
+const nextStage=st=>SIRA.slice(SIRA.indexOf(st)+1).find(s=>stageCards(s).length);
+const prevStage=st=>SIRA.slice(0,SIRA.indexOf(st)).reverse().find(s=>stageCards(s).length);
+const siraHomeHTML=()=>{const l=SIRA.filter(s=>stageCards(s).length);return l.length?`<div class="stack"><div style="display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap"><h2>من أسوتي: السيرة بالبطاقات</h2><a class="ref" href="#oswati">كل مراحل السيرة ←</a></div><div class="grid">${l.map(s=>`<a class="card sira-card" href="#sira-${s.id}"><div class="meta"><span class="tag">${esc(s.y)}</span><span class="tag">${cardsWord(stageCards(s).length)}</span></div><h3>${esc(s.h||s.t)}</h3><p>${esc(s.sub||s.n)}</p><span class="go">افتح المرحلة ←</span></a>`).join("")}</div></div>`:""};
 const siraLinksHTML=list=>list.length?`<div><h4>بطاقات من أسوتي قد تفيدك</h4><div class="sugg">${list.map(([st,c])=>`<a class="sugg-link" href="#sira-${st.id}-${c.n}">${esc(c.t)}</a>`).join("")}</div></div>`:"";
 
 /* ---------- RESEARCHER (option A) ---------- */
 let chat=[];
+const ASK_SAMPLES=["من أرضع النبي ﷺ؟","ما قصة حلف الفضول؟","كيف وضع النبي ﷺ الحجر الأسود؟","متى تزوج النبي ﷺ خديجة؟","ما قصة شق الصدر؟"];
 function answer(qRaw,domain){
  const dom=DOMAINS.find(d=>d.k===domain); if(!dom||dom.s!=="ok") return {kind:"closed"};
- const POOL=FAQ.filter(f=>(f.domain||"sira")===domain&&f.q);
+ const POOL=FAQ.filter(f=>(f.domain||"sira")===domain&&f.q&&(f.sum||f.quran||f.exp||ME?.is_admin));
  for(const g of GUARD) if(g.re.test(qRaw)) return {kind:"guard",msg:g.msg};
  const q=norm(qRaw); const words=q.split(/\s+/).filter(w=>w.length>2);
  let best=null,score=0;
@@ -716,21 +727,32 @@ function answer(qRaw,domain){
    for(const w of words) if(hay.includes(w)) s+=1;
    if(s>score){score=s;best=f}
  }
- if(score>=3) return {kind:"hit",f:best,near:FAQ.filter(f=>f!==best).sort(()=>0).slice(0,0)};
+ if(score>=3) return {kind:"hit",f:best,near:[]};
+ if(domain==="sira"){const cm=siraMatch(qRaw),nw=qWords(qRaw).length; if(cm.length&&(cm[0][2]>=3||(nw===1&&(!cm[1]||cm[0][2]>cm[1][2])))) return {kind:"card",top:cm[0],cards:cm}}
  const near=POOL.map(f=>{let s=0;const hay=norm(f.q+" "+(f.syn||[]).join(" "));for(const w of words)if(hay.includes(w))s++;return[f,s]}).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
  return {kind:"miss",near};
 }
 function renderAnswer(a){
  if(a.kind==="closed") return `<div class="msg-b"><div class="limit">هذا المجال قيد التطوير، ولم تُجهَّز له بعدُ قاعدة علمية صالحة، لذلك البحث فيه غير متاح الآن. اختر مجالًا متاحًا.</div></div>`;
  if(a.kind==="guard") return `<div class="msg-b"><div class="notice">توجيه</div><div class="limit">${a.msg}</div></div>`;
+ if(a.kind==="card"){const [st,c]=a.top; const others=(a.cards||[]).slice(1);
+  return `<div class="msg-b">
+  <div class="notice"><span>الجواب من بطاقات أسوتي</span>${c.st!=="pub"?pill(c.st):""}<span class="tag">${esc(st.t)} · ${pad2(c.n)}</span></div>
+  <div><h4>${esc(c.t)}</h4><p style="font-family:var(--f-body);font-size:18px">${esc(c.s||"")}</p></div>
+  ${a.para?`<div><h4>من نص البطاقة</h4><div class="src"><p style="font-family:var(--f-body);font-size:17px">${qfmt(a.para)}</p></div></div>`:""}
+  ${(c.r||[]).length?`<div><h4>المصادر والمراجع</h4><ul class="refs">${c.r.map(x=>`<li>${x.u?`<a href="${esc(safeUrl(x.u))}" target="_blank" rel="noopener">${esc(x.t)}</a>`:esc(x.t)}</li>`).join("")}</ul></div>`:""}
+  <div class="btns"><a class="btn btn-p btn-sm" href="#sira-${st.id}-${c.n}">اقرأ البطاقة كاملة</a></div>
+  ${others.length?`<div><h4>بطاقات أخرى قريبة</h4><div class="sugg">${others.map(([s2,c2])=>`<a class="sugg-link" href="#sira-${s2.id}-${c2.n}">${esc(c2.t)}</a>`).join("")}</div></div>`:""}
+  <div class="limit" style="font-size:12.5px">النص منقول من بطاقة «أسوتي» كما أعدّها المحرر${c.st!=="pub"?"، وهي قيد المراجعة العلمية":""}. الباحث لا يؤلف إجابات.</div>
+ </div>`}
  if(a.kind==="miss") return (a.cards||[]).length?`<div class="msg-b"><p><b>لم أجد سؤالًا مطابقًا في بنك الأسئلة، لكن هذه بطاقات موثقة من أسوتي تتناول الموضوع:</b></p>${siraLinksHTML(a.cards)}${a.near.length?`<p class="ref">أسئلة قريبة:</p><div class="sugg">${a.near.map(f=>`<button data-ask="${esc(f.q)}">${f.q}</button>`).join("")}</div>`:""}</div>`:`<div class="msg-b"><p><b>لم أعثر في المواد المتاحة على جواب موثق.</b></p>${a.near.length?`<p class="ref">مواد قريبة:</p><div class="sugg">${a.near.map(f=>`<button data-ask="${esc(f.q)}">${f.q}</button>`).join("")}</div>`:`<p class="ref">جرّب صياغة أخرى أو اختر من الأسئلة المقترحة.</p>`}</div>`;
  const f=a.f; const linked=f.link?ITEMS.find(i=>i.id===f.link):null;
  return `<div class="msg-b">
   <div class="notice"><span>الجواب من بنك المواد المراجَعة</span>${pill(f.status)}<span class="tag">${f.id}</span></div>
-  <div><h4>خلاصة موجزة</h4><p style="font-family:var(--f-body);font-size:18px">${f.sum?f.sum:ph("الخلاصة المعتمدة")}</p></div>
-  <div><h4>النص المستند إليه</h4><div class="src">${f.quran?`<div class="ayah" style="font-size:24px;text-align:start">${f.quran}</div>`:ph("النص الأصلي")}</div></div>
-  <div><h4>شرح المادة</h4><p>${f.exp?f.exp:ph("الشرح المراجَع")}</p></div>
-  <div><h4>بيانات التوثيق والرابط</h4><p class="ref">${f.ref?f.ref+" · "+ph("رابط المصدر النصي المعتمد"):ph("الكتاب، الموضع، الرابط")}</p></div>
+  ${f.sum||ME?.is_admin?`<div><h4>خلاصة موجزة</h4><p style="font-family:var(--f-body);font-size:18px">${f.sum?f.sum:ph("الخلاصة المعتمدة")}</p></div>`:""}
+  ${f.quran||ME?.is_admin?`<div><h4>النص المستند إليه</h4><div class="src">${f.quran?`<div class="ayah" style="font-size:24px;text-align:start">${f.quran}</div>`:ph("النص الأصلي")}</div></div>`:""}
+  ${f.exp||ME?.is_admin?`<div><h4>شرح المادة</h4><p>${f.exp?f.exp:ph("الشرح المراجَع")}</p></div>`:""}
+  ${f.ref||ME?.is_admin?`<div><h4>بيانات التوثيق والرابط</h4><p class="ref">${f.ref?f.ref+(ME?.is_admin?" · "+ph("رابط المصدر النصي المعتمد"):""):ph("الكتاب، الموضع، الرابط")}</p></div>`:""}
   ${linked?`<p class="ref">بطاقة مرتبطة: <a href="#oswati" data-goto-tab="${linked.type==="موقف"?"mawaqif":"shamail"}">${linked.title}</a></p>`:""}
   ${siraLinksHTML(a.cards||[])}
   <div class="limit" style="font-size:12.5px">${f.status==="pub"?"مادة منشورة بعد المراجعة.":"هذه المادة لم تُعتمد للنشر بعد."} الشرح المعروض تبسيط تحريري وليس نصًا للمؤلف.</div>
@@ -739,12 +761,12 @@ function renderAnswer(a){
 }
 V.bahith=()=>`<section class="view">
  <div class="stack"><div class="eyebrow">الإصدار الاقتصادي (الخيار أ) · دون ذكاء توليدي</div><h1>الباحث الشرعي</h1>
- <p class="lead">يبحث في أسئلة وأجوبة معدّة مسبقًا وفي بطاقات «أسوتي». لا يؤلف إجابات حرة ولا ينشئ روايات.</p></div>
+ <p class="lead">يبحث في أسئلة وأجوبة معدّة مسبقًا وفي بطاقات «أسوتي»، ويعرض النص كما هو مع مصادره. لا يؤلف إجابات حرة ولا ينشئ روايات.</p></div>
  <div class="two">
   <div class="chat">
-   <div class="chat-head"><label for="dom">المجال</label><select id="dom">${DOMAINS.filter(d=>d.k!=="teach").map(d=>`<option value="${d.k}" ${d.k==="sira"?"selected":""}>${d.k==="sira"?"السيرة والشمائل":d.t}${d.s==="ok"?"":" — غير متاح"}</option>`).join("")}</select><span class="ref" style="margin-inline-start:auto">بنك الأسئلة: ${FAQ.filter(f=>f.q).length} سؤالًا</span></div>
-   <div class="chat-log" id="log">${chat.length?chat.map(c=>c.u?`<div class="msg-u">${esc(c.u)}</div>`:renderAnswer(c.a)).join(""):`<div class="msg-b"><p>اكتب سؤالك عن السيرة والشمائل، أو اختر سؤالًا مقترحًا.</p><div class="sugg">${FAQ.slice(0,5).map(f=>`<button data-ask="${esc(f.q)}">${f.q}</button>`).join("")}</div></div>`}</div>
-   <form class="chat-in" id="askForm"><input id="q" placeholder="مثال: كيف كان النبي ﷺ يستشير أصحابه؟" autocomplete="off"><button class="btn btn-p" type="submit">ابحث</button></form>
+   <div class="chat-head"><label for="dom">المجال</label><select id="dom">${DOMAINS.filter(d=>d.k!=="teach").map(d=>`<option value="${d.k}" ${d.k==="sira"?"selected":""}>${d.k==="sira"?"السيرة والشمائل":d.t}${d.s==="ok"?"":" — غير متاح"}</option>`).join("")}</select><span class="ref" style="margin-inline-start:auto">أسئلة مراجَعة: ${FAQ.filter(f=>f.q&&(f.sum||f.quran)).length} · بطاقات السيرة: ${SIRA.reduce((n,s)=>n+stageCards(s).length,0)}</span></div>
+   <div class="chat-log" id="log">${chat.length?chat.map(c=>c.u?`<div class="msg-u">${esc(c.u)}</div>`:renderAnswer(c.a)).join(""):`<div class="msg-b"><p>اكتب سؤالك عن السيرة والشمائل، أو اختر سؤالًا مقترحًا.</p><div class="sugg">${[...FAQ.filter(f=>f.q&&(f.sum||f.quran)).map(f=>f.q),...ASK_SAMPLES].slice(0,7).map(q=>`<button data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div></div>`}</div>
+   <form class="chat-in" id="askForm"><input id="q" placeholder="مثال: من أرضع النبي ﷺ؟" autocomplete="off"><button class="btn btn-p" type="submit">ابحث</button></form>
   </div>
   <aside class="side">
    <div class="card"><h3>كيف يعمل؟</h3><ol style="margin:0;padding-inline-start:18px;font-size:13.5px;display:grid;gap:4px">
@@ -782,8 +804,8 @@ V.about=()=>`<section class="view">
  <div class="about-logo">${LOGO}<div class="stack" style="gap:4px"><div class="eyebrow">عن المنصة</div><h1>على بصيرة AI</h1><p class="ref">النجمة الثمانية إطار، والكتاب المفتوح معرفة من مصادرها، والنقطة المضيئة بصيرة.</p></div></div>
  <div class="prose">
    <p>منصة عربية موحّدة لتقديم المعرفة الشرعية والشرح والتعليم من مصادر معلومة، مع فصل صريح بين خدمة البحث العلمي وبين الإفتاء أو أي ادعاء بسلطة دينية.</p>
-   <h2>الرسالة</h2><p>${ph("النص التعريفي المعتمد للمنصة")}</p>
-   <h2>المؤسسة</h2><p><b>${ph("الاسم الكامل")}</b> — مؤسسة المشروع والمشرفة العامة.</p>
+   ${ME?.is_admin?`<h2>الرسالة</h2><p>${ph("النص التعريفي المعتمد للمنصة")}</p>
+   <h2>المؤسسة</h2><p><b>${ph("الاسم الكامل")}</b> — مؤسسة المشروع والمشرفة العامة.</p>`:""}
    <h2>الحدود العلمية</h2>
    <ul><li>لا فتوى شخصية ولا ترجيح آلي مستقل بين المذاهب.</li><li>لا تشخيص ولا علاج نفسي بالذكاء الاصطناعي.</li><li>النص القرآني من مصدر نصي مضبوط محدد الرواية.</li><li>عند غياب السند يُصرَّح بذلك، بلا مصدر مختلق أو رابط تخميني.</li></ul>
    <h2>المراجعة العلمية</h2><p>المشروع في مرحلة التأسيس ويُدار من مؤسسة واحدة، مع استشارة المختصين عند الحاجة قبل اعتماد أي مادة خلافية.</p>
@@ -1454,8 +1476,8 @@ function render(){
 addEventListener("hashchange",()=>{if(!/access_token|type=/.test(location.hash)){render();scrollTo(0,0)}});
 function ask(q){
  if(!q.trim())return; const d=$("#dom")?.value||"sira";
- const a=answer(q,d); if(d==="sira"&&a.kind!=="guard") a.cards=siraMatch(q); chat.push({u:q}); chat.push({a});
- safe(()=>API.logSearch(d,a.kind,a.f?.id)); // outcome only — the question text is never stored
+ const a=answer(q,d); if(d==="sira"&&a.kind!=="guard"&&!a.cards) a.cards=siraMatch(q); if(a.kind==="card") a.para=bestPara(a.top[1],q); chat.push({u:q}); chat.push({a});
+ safe(()=>API.logSearch(d,a.kind==="card"?"hit":a.kind,a.f?.id||(a.top?"C-"+a.top[0].id+"-"+a.top[1].n:null))); // outcome only — the question text is never stored
  const keep=d; render(); if($("#dom")) $("#dom").value=keep;
 }
 const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
