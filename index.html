@@ -25,7 +25,7 @@
 <title>على بصيرة AI</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <!-- Portable single file: no external images. To host anywhere, wrap in <html><head>…</head><body>…</body></html> (see index.html build). -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23071330'/%3E%3Cg transform='translate(32 32) scale(.82) translate(-32 -32)'%3E%3Crect x='14' y='14' width='36' height='36' rx='3' fill='%23E2B04A'/%3E%3Crect x='14' y='14' width='36' height='36' rx='3' fill='%23E2B04A' transform='rotate(45 32 32)'/%3E%3Ccircle cx='32' cy='32' r='15' fill='%23071330'/%3E%3Cpath d='M21 31q5.5-2 11 1q5.5-3 11-1v11q-5.5-2-11 1q-5.5-3-11-1z' fill='none' stroke='%23E2B04A' stroke-width='2'/%3E%3Ccircle cx='32' cy='24.5' r='2.4' fill='%23E2B04A'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@500;700&family=Cairo:wght@600;700;800&display=swap">
@@ -557,6 +557,23 @@ footer .copy-btn{color:#CFC6AA;border-color:rgba(226,176,74,.5)}
  .badges li+li{padding-inline-start:12px}
  .brand{margin-inline-end:0}
 }
+
+/* ---------- final brand assets ---------- */
+.logo-img{display:block;width:auto;object-fit:contain}
+.brand .logo-img{height:46px;width:auto;filter:drop-shadow(0 0 6px rgba(226,176,74,.35))}
+.hero2-mark .logo-img{width:min(230px,52vw);height:auto;filter:drop-shadow(0 0 22px rgba(226,176,74,.45))}
+.about-logo .logo-img{width:150px;height:auto;background:var(--navy);border-radius:18px;padding:10px}
+.arch-frame{aspect-ratio:460/469;max-width:440px}
+.arch-frame::after{display:none}
+.arch-frame .hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:22px;border:2px solid var(--gold);box-shadow:0 0 0 5px rgba(10,26,58,.85),0 0 0 6px rgba(226,176,74,.45),0 0 40px -6px rgba(226,176,74,.55)}
+.ribbon{border:2px solid var(--gold);border-radius:14px;padding:10px 28px;font-size:clamp(18px,2.9vw,27px);font-weight:800;line-height:1.45;background:linear-gradient(180deg,rgba(14,37,82,.92),rgba(7,19,48,.92));box-shadow:0 0 0 4px rgba(7,19,48,.9),0 0 0 5px rgba(226,176,74,.45),0 0 26px -6px rgba(226,176,74,.75);text-align:center;max-width:520px}
+.ribbon i{font-size:14px}
+.badges{gap:10px 22px}
+.badges li{flex-direction:column;gap:4px;font-weight:600}
+.badges li+li{padding-inline-start:22px}
+.badges svg{width:30px;height:30px}
+.waves{position:absolute;inset:auto 0 0 0;height:110px;pointer-events:none;z-index:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 110' preserveAspectRatio='none'%3E%3Cpath d='M0 70C200 30 400 30 600 60S1000 100 1200 50' fill='none' stroke='%234DA3FF' stroke-opacity='.55' stroke-width='2'/%3E%3Cpath d='M0 85C220 50 420 55 620 78S1010 108 1200 70' fill='none' stroke='%232D6BFF' stroke-opacity='.4' stroke-width='3'/%3E%3Cpath d='M0 100C250 75 450 80 650 95S1020 112 1200 92' fill='none' stroke='%23E2B04A' stroke-opacity='.45' stroke-width='1.5'/%3E%3C/svg%3E") center bottom/100% 100% no-repeat;filter:drop-shadow(0 0 6px rgba(77,163,255,.7))}
+@media (max-width:760px){.arch-frame{max-width:320px}.badges li+li{padding-inline-start:14px}.ribbon{padding:8px 16px}}
 </style>
 
 <div dir="rtl" lang="ar">
@@ -602,13 +619,15 @@ footer .copy-btn{color:#CFC6AA;border-color:rgba(226,176,74,.5)}
 
 <script>
 /* ===================== BRAND ===================== */
-const LOGO=`<svg class="logo logo2" viewBox="0 0 64 64" role="img" aria-label="شعار على بصيرة"><g class="lg">
+const ASSET=/claude|claudeusercontent/.test(location.hostname)?"https://ala-basira.github.io/":"";
+const LOGO_SVG=`<svg class="logo logo2" viewBox="0 0 64 64" role="img" aria-label="شعار على بصيرة"><g class="lg">
 <path d="M32 50c-8-4.6-17-5.2-26-2.6V24.6c9-2.6 18-2 26 2.6 8-4.6 17-5.2 26-2.6v22.8c-9-2.6-18-2-26 2.6z" class="pg"/>
 <path d="M32 27.2V50M10 29c6.6-1.5 12.6-.9 18 1.6M10 34c6.6-1.5 12.6-.9 18 1.6M10 39c6.6-1.5 12.6-.9 18 1.6M54 29c-6.6-1.5-12.6-.9-18 1.6M54 34c-6.6-1.5-12.6-.9-18 1.6M54 39c-6.6-1.5-12.6-.9-18 1.6" class="ln"/>
 <path d="M21 26.5c0-6.6 4.8-11.8 11-13.2 6.2 1.4 11 6.6 11 13.2" class="dm"/>
 <path d="M32 13.3V8.4" class="ln"/><path d="M33.6 5.6a2.4 2.4 0 1 0 0 3.6 2 2 0 1 1 0-3.6z" class="fl"/>
 <rect x="45" y="9" width="3.6" height="3.6" class="px"/><rect x="50" y="5" width="3.6" height="3.6" class="px b"/><rect x="50" y="10.4" width="3.6" height="3.6" class="px"/><rect x="55.4" y="7.6" width="3.6" height="3.6" class="px b"/><rect x="55.4" y="13" width="2.6" height="2.6" class="px b"/>
 </g></svg>`;
+const LOGO=`<img class="logo logo-img" src="${ASSET}logo.webp" width="260" height="160" alt="شعار على بصيرة" onerror="this.outerHTML=LOGO_SVG">`;
 document.querySelectorAll(".logo-slot").forEach(s=>s.outerHTML=LOGO);
 
 /* Ticker images: hand-drawn line icons, one per headline (no people depicted) */
@@ -746,8 +765,9 @@ V.home=()=>`
         <form class="home-ask" id="homeAsk"><input id="homeQ" autocomplete="off" placeholder="اسأل عن السيرة… مثال: من أرضع النبي ﷺ؟" aria-label="اسأل الباحث الشرعي"><button class="btn btn-p" type="submit">اسأل</button></form>
         <a class="cta" href="#home" data-scroll="#domains">اكتشف المنصة <i aria-hidden="true">←</i></a>
       </div>
-      <div class="hero2-art"><div class="arch-frame">${HERO_ART}<img src="hero.png" alt="" onerror="this.remove()"></div></div>
+      <div class="hero2-art"><div class="arch-frame"><img class="hero-img" src="${ASSET}hero.webp" width="460" height="469" alt="" onerror="this.outerHTML=HERO_ART"></div></div>
     </div>
+    <div class="waves" aria-hidden="true"></div>
   </div>
 
   <div class="dpanel" id="domains">
