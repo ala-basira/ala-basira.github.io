@@ -1,14 +1,14 @@
 {
   "name": "على بصيرة AI",
   "short_name": "على بصيرة",
-  "description": "المعرفة الشرعية من مصادرها، بشرح واضح ومرجع موثّق",
+  "description": "منصة ذكية في خدمة العلوم الشرعية",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#14254B",
-  "theme_color": "#14254B",
+  "background_color": "#0A1A3A",
+  "theme_color": "#071330",
   "icons": [
     {
       "src": "icon-192.png",
