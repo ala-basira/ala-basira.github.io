@@ -310,6 +310,8 @@ a.sira-feature{max-width:720px}
 .sugg-link{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13.5px;text-decoration:none;color:var(--sage);background:var(--sheet)}
 .sugg-link:hover{border-color:var(--sage)}
 
+.share{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
 /* ---------- home ask ---------- */
 .home-ask{display:flex;gap:8px;max-width:600px}
 .home-ask input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:11px 14px;background:var(--sheet);font-size:15px}
@@ -651,6 +653,12 @@ const safeUrl=u=>/^https?:\/\//i.test(u||"")?u:"#";
 const cardsWord=n=>n===1?"بطاقة واحدة":n===2?"بطاقتان":n<=10?n+" بطاقات":n+" بطاقة";
 const stageCards=st=>(st.cards||[]).filter(c=>c.t&&(c.st!=="draft"||ME?.is_admin)).sort((a,b)=>a.n-b.n);
 const pad2=n=>String(n).padStart(2,"0");
+/* share pages: static /s/<route>.html files carry per-page preview tags (social crawlers ignore #routes) */
+const SITE="https://ala-basira.github.io";
+const SHARE_PAGES=new Set(["oswati","bahith","library","about","teaching","join","sira-mawlid","sira-shabab",...[1,2,3,4,5,6,7].flatMap(n=>["sira-mawlid-"+n,"sira-shabab-"+n])]);
+const shareUrl=r=>SHARE_PAGES.has(r)?SITE+"/s/"+r+".html":SITE+"/#"+r;
+const shareRow=(r,t)=>{const u=encodeURIComponent(shareUrl(r)),x=encodeURIComponent(t);
+ return `<div class="share"><span class="ref">شارك:</span><a class="btn btn-s btn-sm" href="https://www.facebook.com/sharer/sharer.php?u=${u}" target="_blank" rel="noopener">فيسبوك</a><a class="btn btn-s btn-sm" href="https://wa.me/?text=${x}%0A${u}" target="_blank" rel="noopener">واتساب</a><a class="btn btn-s btn-sm" href="https://t.me/share/url?url=${u}&text=${x}" target="_blank" rel="noopener">تيليجرام</a><a class="btn btn-s btn-sm" href="https://x.com/intent/post?url=${u}&text=${x}" target="_blank" rel="noopener">إكس</a><button type="button" class="btn btn-s btn-sm" data-copylink="#${r}">انسخ الرابط</button></div>`};
 const siraMissing=()=>`<section class="view"><div class="stack"><h1>البطاقة غير متاحة</h1><p class="lead">ربما نُقلت أو لم تُنشر بعد.</p><div class="btns"><a class="btn btn-p" href="#oswati">العودة إلى أسوتي</a></div></div></section>`;
 V.sira=arg=>{
  const m=String(arg||"").match(/^([a-z]+)(?:-(\d+))?$/); const st=m&&SIRA.find(s=>s.id===m[1]);
@@ -670,6 +678,7 @@ V.sira=arg=>{
    <div class="grid sira-grid">${cards.map(c=>`<a class="card sira-card" href="#sira-${st.id}-${c.n}"><div class="meta"><span class="sc-n">${pad2(c.n)}</span>${c.st!=="pub"?pill(c.st):""}</div><h3>${esc(c.t)}</h3><p>${esc(c.s)}</p><span class="go">اقرأ البطاقة ←</span></a>`).join("")}</div>
   </div>
   ${st.end?`<div class="stack"><h2>خاتمة المرحلة</h2><p class="sira-end">${qfmt(st.end)}</p></div>`:""}
+  ${shareRow("sira-"+st.id,st.h||st.t)}
   ${ME?.is_admin&&st.note?`<div class="limit"><b>ملاحظة للمراجعة (تظهر للمشرف فقط):</b> ${esc(st.note)}</div>`:""}
  </section>`};
 function siraCardView(st,cards,n){
@@ -683,7 +692,7 @@ function siraCardView(st,cards,n){
   <div class="reader-body">${(c.b||[]).map(p=>`<p>${qfmt(p)}</p>`).join("")}</div>
   ${(c.r||[]).length?`<div class="src"><div class="label">المصادر والمراجع</div><ul class="refs">${c.r.map(x=>`<li>${x.u?`<a href="${esc(safeUrl(x.u))}" target="_blank" rel="noopener">${esc(x.t)}</a>`:esc(x.t)}</li>`).join("")}</ul></div>`:""}
   <nav class="sira-nav" aria-label="التنقل بين البطاقات">${prev?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${prev.n}">→ ${esc(prev.t)}</a>`:"<span></span>"}${next?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${next.n}">${esc(next.t)} ←</a>`:`<a class="btn btn-s btn-sm" href="#sira-${st.id}">كل بطاقات المرحلة</a>`}</nav>
-  <div class="btns"><button type="button" class="btn btn-s btn-sm" data-copylink="#sira-${st.id}-${c.n}">انسخ رابط البطاقة</button></div>
+  ${shareRow("sira-"+st.id+"-"+c.n,c.t)}
  </article></section>`}
 function siraMatch(qRaw){
  const words=norm(qRaw).split(/\s+/).filter(w=>w.length>2); if(!words.length) return [];
@@ -1220,8 +1229,8 @@ document.addEventListener("change",e=>{if(e.target.id==="libDomain"){libDomain=e
 document.addEventListener("click",async e=>{
  const t=e.target.closest("[data-libtype],[data-copylink]"); if(!t) return;
  if(t.dataset.libtype){libType=t.dataset.libtype;render();return}
- const url=location.origin+location.pathname+t.dataset.copylink;
- try{await navigator.clipboard.writeText(url);toast("نُسخ رابط المادة")}catch(err){toast(url)}
+ const r=t.dataset.copylink.slice(1), url=SHARE_PAGES.has(r)?shareUrl(r):(/claude\.ai|claudeusercontent/.test(location.host)?SITE+"/":location.origin+location.pathname)+t.dataset.copylink;
+ try{await navigator.clipboard.writeText(url);toast("نُسخ الرابط")}catch(err){toast(url)}
 });
 
 const HELP={
