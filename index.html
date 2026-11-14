@@ -17,6 +17,7 @@
 <meta name="theme-color" content="#071330">
 <link rel="canonical" href="https://ala-basira.github.io/">
 <link rel="manifest" href="manifest.webmanifest">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://ala-basira.github.io/#site","url":"https://ala-basira.github.io/","name":"على بصيرة AI","inLanguage":"ar","description":"منصة عربية للمعرفة الشرعية من مصادرها: السيرة النبوية بالبطاقات، والباحث الشرعي، ومكتبة الأبحاث."},{"@type":"Organization","@id":"https://ala-basira.github.io/#org","name":"على بصيرة AI","url":"https://ala-basira.github.io/","logo":"https://ala-basira.github.io/icon-512.png"}]}</script>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="على بصيرة">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
@@ -409,6 +410,16 @@ details.help ol{margin:8px 0 0;padding-inline-start:20px;display:grid;gap:5px;fo
   .ticker-track a:hover .ti{transform:rotate(-8deg) scale(1.08)}
   #app.still :is(.w,mark.hl,.eyebrow,.ayah,.lead,.grid > *,.timeline .tl,.kpis .kpi,.rules > div,.sugg > *),#app.still .view h2::after{animation:none}
 }
+#readbar{position:fixed;top:0;inset-inline:0;height:3px;z-index:60;transform:scaleX(0);transform-origin:right;background:linear-gradient(90deg,var(--gold-3),var(--gold),var(--gold-2));box-shadow:0 0 10px rgba(226,176,74,.7);opacity:0;transition:opacity .3s;pointer-events:none}
+#readbar.on{opacity:1}
+#totop{position:fixed;inset-inline-start:16px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:55;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--gold);background:rgba(7,19,48,.92);color:var(--gold);cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35),0 0 14px -4px rgba(226,176,74,.7);opacity:0;transform:translateY(12px) scale(.9);pointer-events:none;transition:opacity .25s,transform .25s}
+#totop.on{opacity:1;transform:none;pointer-events:auto}
+#totop:hover{background:var(--gold);color:var(--navy)}
+#totop:focus-visible{outline:2px solid var(--gold-2);outline-offset:3px}
+@media print{#readbar,#totop{display:none}}
+@media (max-width:760px){header.top{transition:transform .28s ease}header.top.hide{transform:translateY(-110%)}}
+@media (max-width:760px) and (prefers-reduced-motion:reduce){header.top{transition:none}}
+@media (prefers-reduced-motion:reduce){#totop{transition:none}}
 @media (prefers-reduced-motion:reduce){.ticker-view{overflow-x:auto}.ticker-track ul[aria-hidden]{display:none}}
 @keyframes tick{from{transform:translateX(-50%)}to{transform:translateX(0)}}
 @keyframes rise{from{opacity:0;transform:translateY(.55em);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
@@ -846,6 +857,7 @@ const OT={
 /* ---------- SIRA STAGES & CARDS ---------- */
 const qfmt=t=>esc(t||"").replace(/﴿[^﴾]*﴾/g,m=>`<span class="q">${m}</span>`);
 const safeUrl=u=>/^https?:\/\//i.test(u||"")?u:"#";
+const readMins=c=>{const n=Math.max(1,Math.round(String([c.s||"",...(c.b||[])].join(" ")).split(/\s+/).length/170));return n===1?"دقيقة واحدة":n===2?"دقيقتان":n<=10?n+" دقائق":n+" دقيقة"};
 const cardsWord=n=>n===1?"بطاقة واحدة":n===2?"بطاقتان":n<=10?n+" بطاقات":n+" بطاقة";
 const stageCards=st=>(st.cards||[]).filter(c=>c.t&&(c.st!=="draft"||ME?.is_admin)).sort((a,b)=>a.n-b.n);
 const pad2=n=>String(n).padStart(2,"0");
@@ -884,7 +896,7 @@ function siraCardView(st,cards,n){
  const prev=cards[i-1], next=cards[i+1];
  return `<section class="view"><article class="reader">
   <a class="ref back" href="#sira-${st.id}">→ ${esc(st.h||st.t)}</a>
-  <div class="meta"><span class="pill intro">البطاقة ${pad2(i+1)} من ${pad2(cards.length)}</span>${c.st!=="pub"?pill(c.st):""}</div>
+  <div class="meta"><span class="pill intro">البطاقة ${pad2(i+1)} من ${pad2(cards.length)}</span><span class="tag">مدة القراءة: ${readMins(c)}</span>${c.st!=="pub"?pill(c.st):""}</div>
   <h1>${esc(c.t)}</h1>
   ${c.s?`<p class="lead">${esc(c.s)}</p>`:""}
   <div class="reader-body">${(c.b||[]).map(p=>`<p>${qfmt(p)}</p>`).join("")}</div>
@@ -893,12 +905,12 @@ function siraCardView(st,cards,n){
   ${shareRow("sira-"+st.id+"-"+c.n,c.t)}
  </article></section>`}
 const STOP=new Set(["من","ما","ماذا","كيف","متي","لماذا","هل","عن","في","علي","الي","او","ثم","التي","الذي","كان","كانت","النبي","رسول","الرسول","الله","صلي","عليه","وسلم","محمد","قصه","حدثني","اريد","اعرف","معني","هو","هي","مع","بعد","قبل"]);
-const stem=w=>{let x=w.replace(/^(وال|بال|كال|فال|لل|ال)/,"");if(x.length<3)x=w;let y=x.replace(/(ها|هم|ات|ون|ين|ه)$/,"");return y.length>=3?y:x};
+const stem=w=>{let x=w.replace(/^(وال|بال|كال|فال|لل|ال)/,"");if(x.length<3)x=w;let y=x.replace(/(ها|هم|ات|ون|ين|ه)$/,"");if(y.length>=4&&/ت$/.test(y))y=y.slice(0,-1);y=y.length>=3?y:x;return STOP.has(y)?x:y};
 const qWords=q=>norm(q).replace(/[^\u0621-\u064Aa-z0-9\s]/g," ").split(/\s+/).filter(w=>w.length>1&&!STOP.has(w)).map(stem).filter(w=>w.length>=2);
 function siraMatch(qRaw){
  const words=qWords(qRaw); if(!words.length) return [];
  const out=[]; SIRA.forEach(st=>stageCards(st).forEach(c=>{const T=norm(c.t),S=norm(c.s||""),B=norm((c.b||[]).join(" "));
-  let s=0; for(const w of words){ if(T.includes(w)) s+=3; else if(S.includes(w)) s+=2; else if(B.includes(w)) s+=1 } if(s>=(words.length===1?1:2)) out.push([st,c,s])}));
+  let s=0,hit=0; for(const w of words){ if(T.includes(w)) s+=3; else if(S.includes(w)) s+=2; else if(B.includes(w)) s+=1; else continue; hit++ } const A=T+" "+S+" "+B; for(let k=0;k+1<words.length;k++){ if(new RegExp(words[k]+"\\S*\\s+(ال)?"+words[k+1]).test(A)) s+=4 } if(s>=(words.length===1?1:2)) out.push([st,c,s,hit])}));
  return out.sort((a,b)=>b[2]-a[2]).slice(0,4);
 }
 function bestPara(c,qRaw){const words=qWords(qRaw);let best=(c.b||[])[0]||"",bs=-1;(c.b||[]).forEach(p=>{const h=norm(p);const s=words.filter(w=>h.includes(w)).length;if(s>bs){bs=s;best=p}});return best}
@@ -923,7 +935,7 @@ function answer(qRaw,domain){
    if(s>score){score=s;best=f}
  }
  if(score>=3) return {kind:"hit",f:best,near:[]};
- if(domain==="sira"){const cm=siraMatch(qRaw),nw=qWords(qRaw).length; if(cm.length&&(cm[0][2]>=3||(nw===1&&(!cm[1]||cm[0][2]>cm[1][2])))) return {kind:"card",top:cm[0],cards:cm}}
+ if(domain==="sira"){const cm=siraMatch(qRaw),nw=qWords(qRaw).length; if(cm.length&&((cm[0][2]>=3&&(nw<2||cm[0][3]>=2||cm[0][2]>=7))||(nw===1&&(!cm[1]||cm[0][2]>cm[1][2])))) return {kind:"card",top:cm[0],cards:cm}}
  const near=POOL.map(f=>{let s=0;const hay=norm(f.q+" "+(f.syn||[]).join(" "));for(const w of words)if(hay.includes(w))s++;return[f,s]}).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
  return {kind:"miss",near};
 }
@@ -1744,6 +1756,19 @@ render();
 refreshMe();
 updateCounter();
 loadContent();
+/* reading progress, back-to-top, arrow-key card navigation */
+(()=>{const bar=document.createElement("div");bar.id="readbar";bar.setAttribute("aria-hidden","true");
+ const top=document.createElement("button");top.id="totop";top.type="button";top.setAttribute("aria-label","العودة إلى أعلى الصفحة");top.title="إلى الأعلى";top.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+ top.onclick=()=>scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+ document.body.append(bar,top);let tk=0;
+ const hd=document.querySelector("header.top");let ly=scrollY;
+ const upd=()=>{tk=0;if(hd){const dy=scrollY-ly;if(scrollY<160||dy<-6||hd.contains(document.activeElement)||hd.querySelector("details[open]"))hd.classList.remove("hide");else if(dy>6)hd.classList.add("hide");if(Math.abs(dy)>6||scrollY<160)ly=scrollY}const reading=/^#(sira-[a-z]+-\d+|pub-)/.test(location.hash);const d=document.documentElement,max=d.scrollHeight-innerHeight;const p=max>0?Math.min(1,scrollY/max):0;bar.style.transform="scaleX("+(reading?p:0)+")";bar.classList.toggle("on",reading);top.classList.toggle("on",scrollY>700)};
+ addEventListener("scroll",()=>{if(!tk)tk=requestAnimationFrame(upd)},{passive:true});addEventListener("resize",upd);addEventListener("hashchange",()=>setTimeout(upd,50));upd();
+ addEventListener("keydown",e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.target.closest("input,textarea,select,[contenteditable]"))return;if(!/^#sira-[a-z]+-\d+$/.test(location.hash))return;
+  const a=document.querySelectorAll(".sira-nav a");if(!a.length)return;let t=null;
+  if(e.key==="ArrowLeft")t=[...a].find(x=>/←/.test(x.textContent));if(e.key==="ArrowRight")t=[...a].find(x=>/→/.test(x.textContent));
+  if(t){e.preventDefault();location.hash=t.getAttribute("href")}});
+})();
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-copy]");if(!b)return;
  try{await navigator.clipboard.writeText(b.dataset.copy);toast("نُسخ البريد")}
  catch(err){const s=b.parentElement.querySelector(".email");if(s){const r=document.createRange();r.selectNodeContents(s);const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}toast("حدّدنا البريد، انسخه يدويًا")}});
