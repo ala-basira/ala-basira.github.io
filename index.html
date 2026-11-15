@@ -27,6 +27,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <!-- Portable single file: no external images. To host anywhere, wrap in <html><head>…</head><body>…</body></html> (see index.html build). -->
 <link rel="icon" type="image/png" href="icon-192.png">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("ab_theme")||"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@500;700&family=Cairo:wght@600;700;800&display=swap">
@@ -519,8 +520,12 @@ a.sira-card:hover,a.sira-feature:hover{border-top-color:var(--sage)}
 .badges svg{width:22px;height:22px;fill:none;stroke:var(--gold);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .badges svg .f{fill:var(--gold);stroke:none}.badges svg .cut{fill:#0A1A3A}
 .hero2 .home-ask{width:100%;max-width:520px}
-.hero2 .home-ask input{background:rgba(5,14,38,.75);border-color:rgba(226,176,74,.55);color:#F3E7C6;border-radius:999px;padding-inline:18px}
-.hero2 .home-ask input::placeholder{color:#B9AE8E}
+.hero2 .home-ask input{background:linear-gradient(180deg,#FFFDF6,#FBF1D9);border:2px solid var(--gold);color:#0A1A3F;font-weight:600;border-radius:999px;padding:13px 20px;width:0;font-size:16px;box-shadow:0 0 0 4px rgba(226,176,74,.18),0 0 26px -4px rgba(226,176,74,.75);animation:askGlow 3.2s ease-in-out infinite}
+.hero2 .home-ask input::placeholder{color:#7A6A45;font-weight:500}
+.hero2 .home-ask input:focus{outline:none;border-color:var(--gold-2);box-shadow:0 0 0 5px rgba(226,176,74,.35),0 0 30px -2px rgba(226,176,74,.9);animation:none}
+.hero2 .ask-lbl{display:flex;align-items:center;gap:6px;justify-content:center;color:var(--gold-2);font-weight:700;font-size:15px;margin-bottom:-2px}
+@keyframes askGlow{0%,100%{box-shadow:0 0 0 4px rgba(226,176,74,.16),0 0 18px -6px rgba(226,176,74,.6)}50%{box-shadow:0 0 0 6px rgba(226,176,74,.28),0 0 32px -2px rgba(226,176,74,.9)}}
+@media (prefers-reduced-motion:reduce){.hero2 .home-ask input{animation:none}}
 .cta{display:inline-flex;align-items:center;gap:14px;padding:10px 12px 10px 26px;border-radius:999px;background:linear-gradient(180deg,#0E2552,#071330);border:2px solid var(--gold);color:#F3E7C6;font-weight:700;font-size:17px;text-decoration:none;box-shadow:0 0 22px -6px rgba(226,176,74,.9)}
 .cta i{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:var(--navy);font-style:normal;font-weight:800}
 .cta:hover{filter:brightness(1.12)}
@@ -777,6 +782,7 @@ V.home=()=>`
         <h1 class="hero2-title"><span>على بصيرة</span> <b class="ai">AI</b></h1>
         <p class="ribbon"><i>◆</i>منصة ذكية في خدمة العلوم الشرعية<i>◆</i></p>
         <ul class="badges"><li>${icn("shield")}معرفة موثّقة</li><li>${icn("search")}بحث علمي</li><li>${icn("cap")}تعليم معاصر</li></ul>
+        <div class="ask-lbl"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m20 20-4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>اسأل الباحث الشرعي عن السيرة النبوية</div>
         <form class="home-ask" id="homeAsk"><input id="homeQ" autocomplete="off" placeholder="اسأل عن السيرة… مثال: من أرضع النبي ﷺ؟" aria-label="اسأل الباحث الشرعي"><button class="btn btn-p" type="submit">اسأل</button></form>
         <a class="cta" href="#home" data-scroll="#domains">اكتشف المنصة <i aria-hidden="true">←</i></a>
       </div>
@@ -919,7 +925,7 @@ function siraMatch(qRaw){
 function bestPara(c,qRaw){const words=qWords(qRaw);let best=(c.b||[])[0]||"",bs=-1;(c.b||[]).forEach(p=>{const h=norm(p);const s=words.filter(w=>h.includes(w)).length;if(s>bs){bs=s;best=p}});return best}
 const nextStage=st=>SIRA.slice(SIRA.indexOf(st)+1).find(s=>stageCards(s).length);
 const prevStage=st=>SIRA.slice(0,SIRA.indexOf(st)).reverse().find(s=>stageCards(s).length);
-const siraHomeHTML=()=>{const l=SIRA.filter(s=>stageCards(s).length);return l.length?`<div class="stack"><div style="display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap"><h2>من أسوتي: السيرة بالبطاقات</h2><a class="ref" href="#oswati">كل مراحل السيرة ←</a></div><div class="grid">${l.map(s=>`<a class="card sira-card" href="#sira-${s.id}"><div class="meta"><span class="tag">${esc(s.y)}</span><span class="tag">${cardsWord(stageCards(s).length)}</span></div><h3>${esc(s.h||s.t)}</h3><p>${esc(s.sub||s.n)}</p><span class="go">افتح المحطة ←</span></a>`).join("")}</div></div>`:""};
+const siraHomeHTML=()=>{const l=SIRA.filter(s=>stageCards(s).length);return l.length?`<div class="stack"><div style="display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap"><h2>من أسوتي: السيرة بالبطاقات</h2><a class="ref" href="#oswati">كل محطات السيرة ←</a></div><div class="grid">${l.map(s=>`<a class="card sira-card" href="#sira-${s.id}"><div class="meta"><span class="tag">${esc(s.y)}</span><span class="tag">${cardsWord(stageCards(s).length)}</span></div><h3>${esc(s.h||s.t)}</h3><p>${esc(s.sub||s.n)}</p><span class="go">افتح المحطة ←</span></a>`).join("")}</div></div>`:""};
 const siraLinksHTML=list=>list.length?`<div><h4>بطاقات من أسوتي قد تفيدك</h4><div class="sugg">${list.map(([st,c])=>`<a class="sugg-link" href="#sira-${st.id}-${c.n}">${esc(c.t)}</a>`).join("")}</div></div>`:"";
 
 /* ---------- RESEARCHER (option A) ---------- */
@@ -1504,7 +1510,7 @@ const helpHTML=k=>HELP[k]?`<details class="help" ${k===cmsTab&&!helpSeen[k]?"ope
 const helpSeen={};
 const QA=[
  ["pubs","pub-new","file","أضيفي بحثًا أو مقالًا أو ملفًا","ينشر في المكتبة وفي قسم مجاله"],
- ["sira","sc-add","palm","أضيفي بطاقة سيرة","مراحل السيرة في أسوتي"],
+ ["sira","sc-add","palm","أضيفي بطاقة سيرة","محطات السيرة في أسوتي"],
  ["faq","faq-add","ask","أضيفي سؤالًا وجوابًا للباحث","ليجيب به الباحث الشرعي"],
  ["ticker","","palm","عدّلي الشريط المتحرك","العناوين أعلى الموقع"],
  ["domains","","steps","فعّلي مجالًا أو أغلقيه","حالة الأقسام الثمانية"],
@@ -1755,6 +1761,7 @@ document.addEventListener("click",e=>{const dd=$("#nav details");if(dd&&dd.open&
 $("#themeBtn").addEventListener("click",()=>{
  const r=document.documentElement; const dark=r.dataset.theme? r.dataset.theme==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
  r.dataset.theme=dark?"light":"dark";
+ try{localStorage.setItem("ab_theme",r.dataset.theme)}catch(e){}
 });
 render();
 refreshMe();
