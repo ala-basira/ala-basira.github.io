@@ -154,14 +154,11 @@ a.domain:hover{border-color:var(--sage)}
 .chat-log{padding:16px;display:grid;gap:14px;align-content:start;overflow-y:auto;max-height:640px}
 .msg-u{justify-self:start;background:var(--sage);color:var(--sheet);padding:8px 14px;border-radius:12px 12px 12px 3px;max-width:80%}
 .msg-b{justify-self:stretch;display:grid;gap:10px;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--paper)}
-.ai-msg{border-color:rgba(226,176,74,.55);box-shadow:0 0 0 3px rgba(226,176,74,.08)}
-.ai-body p{font-family:var(--f-body);font-size:18px;line-height:1.95;margin:0 0 .5em}
-.ai-body .cite{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;margin-inline:2px;border-radius:999px;font-size:12px;font-weight:800;line-height:1;vertical-align:super;text-decoration:none;color:var(--navy);background:var(--gold)}
-.ai-src{margin:0;padding-inline-start:22px;display:grid;gap:4px}
-.ai-src a{color:var(--ink)}
-.ai-typing span{animation:aiDot 1.2s infinite;opacity:.2}.ai-typing span:nth-child(2){animation-delay:.2s}.ai-typing span:nth-child(3){animation-delay:.4s}
-@keyframes aiDot{50%{opacity:1}}
-@media (prefers-reduced-motion:reduce){.ai-typing span{animation:none;opacity:1}}
+.verify{border:1px solid rgba(226,176,74,.6);border-radius:10px;padding:10px 12px;background:rgba(226,176,74,.07);display:grid;gap:8px}
+.verify dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
+.verify dt{color:var(--muted);font-size:14px}
+.verify dd{margin:0;font-weight:700}
+.verify .btn{justify-self:start}
 .msg-b .notice{font-size:12.5px;color:var(--ink-2);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .msg-b h4{margin:0;font-size:13px;color:var(--accent);font-weight:600}
 .limit{background:var(--warn-soft);color:var(--warn);border-radius:6px;padding:8px 12px;font-size:13.5px}
@@ -976,6 +973,7 @@ function renderAnswer(a){
   ${f.sum||ME?.is_admin?`<div><h4>خلاصة موجزة</h4><p style="font-family:var(--f-body);font-size:18px">${f.sum?f.sum:ph("الخلاصة المعتمدة")}</p></div>`:""}
   ${f.quran||ME?.is_admin?`<div><h4>النص المستند إليه</h4><div class="src">${f.quran?`<div class="ayah" style="font-size:24px;text-align:start">${f.quran}</div>`:ph("النص الأصلي")}</div></div>`:""}
   ${f.exp||ME?.is_admin?`<div><h4>شرح المادة</h4><p>${f.exp?f.exp:ph("الشرح المراجَع")}</p></div>`:""}
+  ${f.book||f.url?`<div class="verify"><h4>التوثيق</h4><dl>${f.book?`<dt>الكتاب</dt><dd>${esc(f.book)}</dd>`:""}${f.page?`<dt>الجزء والصفحة</dt><dd>${esc(f.page)}</dd>`:""}</dl>${f.url?`<a class="btn btn-s btn-sm" href="${esc(safeUrl(f.url))}" target="_blank" rel="noopener">تحقّق من النص في مصدره ↗</a>`:""}</div>`:""}
   ${f.ref||ME?.is_admin?`<div><h4>بيانات التوثيق والرابط</h4><p class="ref">${f.ref?f.ref+(ME?.is_admin?" · "+ph("رابط المصدر النصي المعتمد"):""):ph("الكتاب، الموضع، الرابط")}</p></div>`:""}
   ${linked?`<p class="ref">بطاقة مرتبطة: <a href="#oswati" data-goto-tab="${linked.type==="موقف"?"mawaqif":"shamail"}">${linked.title}</a></p>`:""}
   ${siraLinksHTML(a.cards||[])}
@@ -984,13 +982,12 @@ function renderAnswer(a){
  </div>`;
 }
 V.bahith=()=>`<section class="view">
- <div class="stack">${AI.on?`<div class="eyebrow">المساعد الذكي · يجيب من مصادر المنصة فقط</div><h1>الباحث الشرعي</h1>
- <p class="lead">اسأل بلغتك عن السيرة النبوية، فيصوغ لك المساعد إجابة من بطاقات «أسوتي» وبنك الأسئلة والأجوبة المعتمدة، مع ذكر مصدر كل معلومة. وإذا لم يجد الجواب في مصادر المنصة قال ذلك صراحة ولم يؤلف.</p>`:`<div class="eyebrow">الإصدار الاقتصادي (الخيار أ) · دون ذكاء توليدي</div><h1>الباحث الشرعي</h1>
- <p class="lead">يبحث في أسئلة وأجوبة معدّة مسبقًا وفي بطاقات «أسوتي»، ويعرض النص كما هو مع مصادره. لا يؤلف إجابات حرة ولا ينشئ روايات.</p>`}</div>
+ <div class="stack"><div class="eyebrow">باحث مغلق · يجيب من بنك أسئلة وأجوبة موثقة فقط · دون ذكاء توليدي</div><h1>الباحث الشرعي</h1>
+ <p class="lead">يجيب من أسئلة وأجوبة أعدّتها المنصة من كتب مرجعية معتمدة، ومن بطاقات «أسوتي». لكل جواب مصدره: اسم الكتاب ورقم الصفحة ورابط للتحقق من النص في أصله. لا يؤلف إجابات ولا ينشئ روايات، وما لم يُعدّ له جواب موثق يُقال فيه ذلك صراحة.</p></div>
  <div class="two">
   <div class="chat">
    <div class="chat-head"><label for="dom">المجال</label><select id="dom">${DOMAINS.filter(d=>!["teach","bahith"].includes(d.k)).map(d=>`<option value="${d.k}" ${d.k==="sira"?"selected":""}>${d.k==="sira"?"السيرة والشمائل":d.t}${d.s==="ok"?"":" — غير متاح"}</option>`).join("")}</select><span class="ref" style="margin-inline-start:auto">أسئلة مراجَعة: ${FAQ.filter(f=>f.q&&(f.sum||f.quran)).length} · بطاقات السيرة: ${SIRA.reduce((n,s)=>n+stageCards(s).length,0)}</span></div>
-   <div class="chat-log" id="log">${chat.length?chat.map(c=>c.u?`<div class="msg-u">${esc(c.u)}</div>`:c.ai?renderAI(c.ai):renderAnswer(c.a)).join(""):`<div class="msg-b"><p>اكتب سؤالك عن السيرة والشمائل، أو اختر سؤالًا مقترحًا.</p><div class="sugg">${[...FAQ.filter(f=>f.q&&(f.sum||f.quran)).map(f=>f.q),...ASK_SAMPLES].slice(0,7).map(q=>`<button data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div></div>`}</div>
+   <div class="chat-log" id="log">${chat.length?chat.map(c=>c.u?`<div class="msg-u">${esc(c.u)}</div>`:renderAnswer(c.a)).join(""):`<div class="msg-b"><p>اكتب سؤالك عن السيرة والشمائل، أو اختر سؤالًا مقترحًا.</p><div class="sugg">${[...FAQ.filter(f=>f.q&&(f.sum||f.quran)).map(f=>f.q),...ASK_SAMPLES].slice(0,7).map(q=>`<button data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div></div>`}</div>
    <form class="chat-in" id="askForm"><input id="q" placeholder="مثال: من أرضع النبي ﷺ؟" autocomplete="off"><button class="btn btn-p" type="submit">ابحث</button></form>
   </div>
   <aside class="side">
@@ -1564,14 +1561,17 @@ const faqRow=(f,i)=>`<details class="cms-faq" data-row="${i}" ${f._open?"open":"
   <label>كلمات البحث المرادفة (افصل بفاصلة)<input data-f="syn" value="${esc((f.syn||[]).join("، "))}"></label>
   <label>الخلاصة الموجزة<textarea data-f="sum" rows="2">${esc(f.sum||"")}</textarea></label>
   <label>النص المستند إليه (آية أو حديث حرفيًا)<textarea data-f="quran" rows="2">${esc(f.quran||"")}</textarea></label>
-  <label>التوثيق (المصدر والموضع والرابط)<input data-f="ref" value="${esc(f.ref||"")}"></label>
+  <label>الكتاب المرجع<input data-f="book" value="${esc(f.book||"")}" placeholder="مثال: الشمائل المحمدية للترمذي"></label>
+  <label>الجزء والصفحة<input data-f="page" value="${esc(f.page||"")}" placeholder="مثال: ص 45، حديث 12"></label>
+  <label>رابط التحقق (رابط الصفحة في المكتبة الرقمية)<input data-f="url" dir="ltr" value="${esc(f.url||"")}" placeholder="https://"></label>
+  <label>ملاحظة توثيق إضافية (اختياري)<input data-f="ref" value="${esc(f.ref||"")}"></label>
   <label>الشرح<textarea data-f="exp" rows="3">${esc(f.exp||"")}</textarea></label>
   <label>المجال الذي يُجيب فيه الباحث<select data-f="domain">${DOMAINS.filter(d=>!["teach","bahith"].includes(d.k)).map(d=>`<option value="${d.k}" ${(f.domain||"sira")===d.k?"selected":""}>${d.t}${d.s==="ok"?"":" (غير مفعّل بعد)"}</option>`).join("")}</select></label>
   <label>الحالة<select data-f="status">${["draft","review","pub"].map(s=>`<option value="${s}" ${s===(f.status||"draft")?"selected":""}>${STATUS_LABEL[s]}</option>`).join("")}</select></label>
   <div class="btns"><button type="button" class="btn btn-s btn-sm" data-cms="faq-del" data-i="${i}">حذف السؤال</button></div>
  </div></details>`;
 const collectFaq=()=>[...document.querySelectorAll("#faqEd .cms-faq")].map((r,i)=>{const g=f=>r.querySelector(`[data-f="${f}"]`).value.trim();
- const base=faqDraft[i]||{}; return{...base,_open:undefined,q:g("q"),syn:g("syn").split(/[،,]/).map(x=>x.trim()).filter(Boolean),sum:g("sum")||null,quran:g("quran")||null,ref:g("ref")||null,exp:g("exp")||null,domain:g("domain")||"sira",status:g("status")}});
+ const base=faqDraft[i]||{}; return{...base,_open:undefined,q:g("q"),syn:g("syn").split(/[،,]/).map(x=>x.trim()).filter(Boolean),sum:g("sum")||null,quran:g("quran")||null,ref:g("ref")||null,book:g("book")||null,page:g("page")||null,url:g("url")||null,exp:g("exp")||null,domain:g("domain")||"sira",status:g("status")}});
 
 const siraCardRow=(c,i)=>`<details class="cms-faq" data-row="${i}" ${c._open?"open":""}><summary><span class="tag">${pad2(c.n||i+1)}</span> ${esc(c.t||"بطاقة جديدة")} ${pill(c.st||"draft")}</summary>
  <div class="form" style="max-width:none">
@@ -1621,7 +1621,7 @@ function renderCMS(){
  else if(cmsTab==="domains") body=`<div class="stack" id="domEd">${DOMAINS.map(d=>`<div class="cms-row cms-dom"><span>${d.t}</span><select data-k="${d.k}" aria-label="حالة ${d.t}">${["ok","dev","intro"].map(s=>`<option value="${s}" ${d.s===s?"selected":""}>${STATUS_LABEL[s]}</option>`).join("")}</select></div>`).join("")}</div>
   <div class="btns"><button class="btn btn-p btn-sm" type="button" data-cms="dom-save">احفظ حالة المجالات</button></div>`;
  else body=`<p class="ref">الأسئلة المنشورة والمسودات كلها تظهر في الباحث، مع شارة الحالة. اكتب النص والتوثيق كما وردا في المصدر.</p><div class="stack" id="faqEd">${faqDraft.map(faqRow).join("")}</div>
-  <div class="btns"><button class="btn btn-s btn-sm" type="button" data-cms="faq-add">أضف سؤالًا</button><button class="btn btn-p btn-sm" type="button" data-cms="faq-save">احفظ بنك الأسئلة</button></div>`;
+  <div class="btns"><button class="btn btn-s btn-sm" type="button" data-cms="faq-add">أضف سؤالًا</button><button class="btn btn-s btn-sm" type="button" data-cms="faq-imp-open">استيراد دفعة أسئلة</button><button class="btn btn-p btn-sm" type="button" data-cms="faq-save">احفظ بنك الأسئلة</button></div>`;
  box.innerHTML=`<div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" type="button" aria-selected="${cmsTab===k}" data-ctab="${k}">${l}</button>`).join("")}</div><div class="stack" style="padding-top:14px">${helpHTML(cmsTab)}${body}</div>`;
 }
 document.addEventListener("click",async e=>{
@@ -1644,6 +1644,12 @@ document.addEventListener("click",async e=>{
     t.disabled=true;await saveContentNow("domains",m,"تحديث حالة المجالات");DOMAINS.forEach(d=>d.s=m[d.k]||d.s);renderCMS();done("حُفظت حالة المجالات")}
   if(a==="faq-add"){faqDraft=collectFaq();const n=Math.max(0,...faqDraft.map(f=>+(String(f.id).match(/\d+/)||[0])[0]))+1;
     faqDraft.push({id:"FAQ-"+String(n).padStart(2,"0"),q:"",syn:[],status:"draft",_open:true});renderCMS()}
+  if(a==="faq-imp-open"){faqDraft=collectFaq();const box=$("#faqImp");if(box){box.hidden=!box.hidden;return}
+    $("#faqEd").insertAdjacentHTML("beforebegin",`<div class="form" id="faqImp" style="max-width:none"><label>الصقي هنا ملف الأسئلة والأجوبة (JSON) كما يُرسل إليك<textarea id="faqImpTxt" rows="6" dir="ltr" placeholder='[{"q":"...","sum":"...","book":"...","page":"...","url":"..."}]'></textarea></label><div class="btns"><button type="button" class="btn btn-p btn-sm" data-cms="faq-imp">أضف إلى البنك للمراجعة</button></div></div>`)}
+  if(a==="faq-imp"){let arr;try{arr=JSON.parse($("#faqImpTxt").value)}catch(e){toast("صيغة الملف غير صحيحة");return}
+    if(!Array.isArray(arr)){toast("صيغة الملف غير صحيحة");return}faqDraft=collectFaq();let n=Math.max(0,...faqDraft.map(f=>+(String(f.id).match(/\d+/)||[0])[0])),k=0;
+    for(const x of arr){if(!x||!x.q||!x.sum)continue;n++;k++;faqDraft.push({id:"FAQ-"+String(n).padStart(2,"0"),q:String(x.q),syn:Array.isArray(x.syn)?x.syn.map(String):[],sum:String(x.sum),quran:x.quran||x.text||null,exp:x.exp||null,book:x.book||null,page:x.page||null,url:x.url||null,ref:x.ref||null,domain:x.domain||"sira",status:"review"})}
+    renderCMS();toast(k?`أُضيف ${k} سؤالًا بحالة «قيد المراجعة». راجعيها ثم احفظي البنك.`:"لم يُعثر على أسئلة صالحة في الملف")}
   if(a==="faq-del"){faqDraft=collectFaq();faqDraft.splice(+t.dataset.i,1);renderCMS()}
   if(a==="sc-add"){collectSira();const c=siraDraft[siraIdx].cards=siraDraft[siraIdx].cards||[];c.push({n:Math.max(0,...c.map(x=>x.n||0))+1,t:"",s:"",b:[],r:[],st:"draft",_open:true});renderCMS();const r=[...document.querySelectorAll("#siraEd .cms-faq")].pop();r&&r.querySelector('[data-f="t"]').focus()}
   if(a==="sc-del"){if(!t.dataset.armed){t.dataset.armed="1";t.textContent="اضغطي للتأكيد";setTimeout(()=>{if(t.isConnected){delete t.dataset.armed;t.textContent="حذف البطاقة"}},4000);return}
@@ -1703,44 +1709,15 @@ function render(){
  const dd=$("#nav details"); if(dd){dd.classList.toggle("on",!!dd.querySelector('a[aria-current="page"]'));dd.querySelector(".admin-only").hidden=!ME?.is_admin}
  const log=$("#log"); if(log) log.scrollTop=log.scrollHeight;
  if(v==="admin"){renderCMS();loadAdmin()}
- if((v==="bahith"||v==="home")&&!AI.checked) aiProbe();
  if(entered && v!=="admin") safe(()=>API.track(v)).then(updateCounter);
 }
 addEventListener("hashchange",()=>{if(!/access_token|type=/.test(location.hash)){render();scrollTo(0,0)}});
 function ask(q){
  if(!q.trim())return; const d=$("#dom")?.value||"sira";
- if(AI.on&&d==="sira"&&!GUARD.some(g=>g.re.test(q))){askAI(q);return}
  const a=answer(q,d); if(d==="sira"&&a.kind!=="guard"&&!a.cards) a.cards=siraMatch(q); if(a.kind==="card") a.para=bestPara(a.top[1],q); chat.push({u:q}); chat.push({a});
  safe(()=>API.logSearch(d,a.kind==="card"?"hit":a.kind,a.f?.id||(a.top?"C-"+a.top[0].id+"-"+a.top[1].n:null))); // outcome only — the question text is never stored
  const keep=d; render(); if($("#dom")) $("#dom").value=keep;
 }
-/* ---------- smart assistant (Supabase Edge Function «basira-chat»; answers only from platform sources) ---------- */
-const AI={on:false,checked:false,busy:false};
-const AI_URL=()=>CONFIG.SUPABASE_URL+"/functions/v1/basira-chat";
-const aiHeaders=()=>({"Content-Type":"application/json",apikey:CONFIG.SUPABASE_ANON_KEY,Authorization:"Bearer "+CONFIG.SUPABASE_ANON_KEY});
-async function aiProbe(){if(AI.checked||!LIVE)return;AI.checked=true;try{const r=await Promise.race([fetch(AI_URL(),{headers:aiHeaders()}),new Promise((_,j)=>setTimeout(()=>j(0),6000))]);const j=r.ok?await r.json():{};if(j.configured){AI.on=true;if(location.hash==="#bahith")render()}}catch(e){}}
-async function askAI(q){
- if(AI.busy)return; AI.busy=true;
- const history=[];for(let i=0;i<chat.length;i++){const c=chat[i];if(c.u&&chat[i+1]?.ai?.answer){history.push({role:"user",content:c.u},{role:"assistant",content:chat[i+1].ai.answer})}}
- chat.push({u:q});const slot={ai:{pending:true}};chat.push(slot);render();
- try{const r=await fetch(AI_URL(),{method:"POST",headers:aiHeaders(),body:JSON.stringify({q,history:history.slice(-6)})});const j=await r.json().catch(()=>({}));
-  if(!r.ok||!j.answer){if(j.error==="rate_limited"){slot.ai={err:"وصلت إلى الحد المسموح من الأسئلة في هذه الساعة. حاول بعد قليل، أو تصفح محطات السيرة مباشرة."}}else{if(j.error==="not_configured")AI.on=false;delete slot.ai;const a=answer(q,"sira");if(!a.cards)a.cards=siraMatch(q);if(a.kind==="card")a.para=bestPara(a.top[1],q);slot.a=a}}
-  else slot.ai={answer:j.answer,sources:j.sources||[],grounded:j.grounded};
-  safe(()=>API.logSearch("sira",slot.ai?.grounded||slot.a?.kind==="card"||slot.a?.kind==="hit"?"hit":"miss",null)); // outcome only — the question text is never stored
- }catch(e){delete slot.ai;const a=answer(q,"sira");if(!a.cards)a.cards=siraMatch(q);if(a.kind==="card")a.para=bestPara(a.top[1],q);slot.a=a}
- AI.busy=false;render();
-}
-function renderAI(x){
- if(x.pending) return `<div class="msg-b ai-msg" aria-live="polite"><div class="notice"><span>المساعد الذكي</span></div><p class="ai-typing">يبحث في مصادر المنصة<span>.</span><span>.</span><span>.</span></p></div>`;
- if(x.err) return `<div class="msg-b"><div class="limit">${esc(x.err)}</div></div>`;
- const src=x.sources||[];const link=n=>{const s=src.find(y=>y.n===+n);return s?`<a class="cite" href="${esc(s.href)}" title="${esc(s.title)}">${n}</a>`:""};
- const body=esc(x.answer).split(/\n\s*\n|\n/).filter(p=>p.trim()).map(p=>`<p>${p.replace(/\[(\d+)\]/g,(m,n)=>link(n))}</p>`).join("");
- return `<div class="msg-b ai-msg">
-  <div class="notice"><span>المساعد الذكي · من مصادر المنصة</span></div>
-  <div class="ai-body">${body}</div>
-  ${src.length?`<div><h4>المصادر</h4><ol class="ai-src">${src.map(s=>`<li value="${s.n}"><a href="${esc(s.href)}">${esc(s.title)}</a></li>`).join("")}</ol></div>`:""}
-  <div class="limit" style="font-size:12.5px">صاغ المساعد هذه الإجابة آليًا من مصادر المنصة المذكورة، فارجع إليها للتوثيق. لا يُصدر فتاوى، ولا تُحفظ أسئلتك.</div>
- </div>`}
 const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 const pickedInterests=f=>[...f.querySelectorAll('input[name="interest"]:checked')].map(x=>x.value);
 document.addEventListener("click",async e=>{
