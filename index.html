@@ -154,6 +154,14 @@ a.domain:hover{border-color:var(--sage)}
 .chat-log{padding:16px;display:grid;gap:14px;align-content:start;overflow-y:auto;max-height:640px}
 .msg-u{justify-self:start;background:var(--sage);color:var(--sheet);padding:8px 14px;border-radius:12px 12px 12px 3px;max-width:80%}
 .msg-b{justify-self:stretch;display:grid;gap:10px;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--paper)}
+.ai-msg{border-color:rgba(226,176,74,.55);box-shadow:0 0 0 3px rgba(226,176,74,.08)}
+.ai-body p{font-family:var(--f-body);font-size:18px;line-height:1.95;margin:0 0 .5em}
+.ai-body .cite{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;margin-inline:2px;border-radius:999px;font-size:12px;font-weight:800;line-height:1;vertical-align:super;text-decoration:none;color:var(--navy);background:var(--gold)}
+.ai-src{margin:0;padding-inline-start:22px;display:grid;gap:4px}
+.ai-src a{color:var(--ink)}
+.ai-typing span{animation:aiDot 1.2s infinite;opacity:.2}.ai-typing span:nth-child(2){animation-delay:.2s}.ai-typing span:nth-child(3){animation-delay:.4s}
+@keyframes aiDot{50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.ai-typing span{animation:none;opacity:1}}
 .msg-b .notice{font-size:12.5px;color:var(--ink-2);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .msg-b h4{margin:0;font-size:13px;color:var(--accent);font-weight:600}
 .limit{background:var(--warn-soft);color:var(--warn);border-radius:6px;padding:8px 12px;font-size:13.5px}
@@ -976,12 +984,13 @@ function renderAnswer(a){
  </div>`;
 }
 V.bahith=()=>`<section class="view">
- <div class="stack"><div class="eyebrow">الإصدار الاقتصادي (الخيار أ) · دون ذكاء توليدي</div><h1>الباحث الشرعي</h1>
- <p class="lead">يبحث في أسئلة وأجوبة معدّة مسبقًا وفي بطاقات «أسوتي»، ويعرض النص كما هو مع مصادره. لا يؤلف إجابات حرة ولا ينشئ روايات.</p></div>
+ <div class="stack">${AI.on?`<div class="eyebrow">المساعد الذكي · يجيب من مصادر المنصة فقط</div><h1>الباحث الشرعي</h1>
+ <p class="lead">اسأل بلغتك عن السيرة النبوية، فيصوغ لك المساعد إجابة من بطاقات «أسوتي» وبنك الأسئلة والأجوبة المعتمدة، مع ذكر مصدر كل معلومة. وإذا لم يجد الجواب في مصادر المنصة قال ذلك صراحة ولم يؤلف.</p>`:`<div class="eyebrow">الإصدار الاقتصادي (الخيار أ) · دون ذكاء توليدي</div><h1>الباحث الشرعي</h1>
+ <p class="lead">يبحث في أسئلة وأجوبة معدّة مسبقًا وفي بطاقات «أسوتي»، ويعرض النص كما هو مع مصادره. لا يؤلف إجابات حرة ولا ينشئ روايات.</p>`}</div>
  <div class="two">
   <div class="chat">
    <div class="chat-head"><label for="dom">المجال</label><select id="dom">${DOMAINS.filter(d=>!["teach","bahith"].includes(d.k)).map(d=>`<option value="${d.k}" ${d.k==="sira"?"selected":""}>${d.k==="sira"?"السيرة والشمائل":d.t}${d.s==="ok"?"":" — غير متاح"}</option>`).join("")}</select><span class="ref" style="margin-inline-start:auto">أسئلة مراجَعة: ${FAQ.filter(f=>f.q&&(f.sum||f.quran)).length} · بطاقات السيرة: ${SIRA.reduce((n,s)=>n+stageCards(s).length,0)}</span></div>
-   <div class="chat-log" id="log">${chat.length?chat.map(c=>c.u?`<div class="msg-u">${esc(c.u)}</div>`:renderAnswer(c.a)).join(""):`<div class="msg-b"><p>اكتب سؤالك عن السيرة والشمائل، أو اختر سؤالًا مقترحًا.</p><div class="sugg">${[...FAQ.filter(f=>f.q&&(f.sum||f.quran)).map(f=>f.q),...ASK_SAMPLES].slice(0,7).map(q=>`<button data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div></div>`}</div>
+   <div class="chat-log" id="log">${chat.length?chat.map(c=>c.u?`<div class="msg-u">${esc(c.u)}</div>`:c.ai?renderAI(c.ai):renderAnswer(c.a)).join(""):`<div class="msg-b"><p>اكتب سؤالك عن السيرة والشمائل، أو اختر سؤالًا مقترحًا.</p><div class="sugg">${[...FAQ.filter(f=>f.q&&(f.sum||f.quran)).map(f=>f.q),...ASK_SAMPLES].slice(0,7).map(q=>`<button data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div></div>`}</div>
    <form class="chat-in" id="askForm"><input id="q" placeholder="مثال: من أرضع النبي ﷺ؟" autocomplete="off"><button class="btn btn-p" type="submit">ابحث</button></form>
   </div>
   <aside class="side">
@@ -1694,15 +1703,44 @@ function render(){
  const dd=$("#nav details"); if(dd){dd.classList.toggle("on",!!dd.querySelector('a[aria-current="page"]'));dd.querySelector(".admin-only").hidden=!ME?.is_admin}
  const log=$("#log"); if(log) log.scrollTop=log.scrollHeight;
  if(v==="admin"){renderCMS();loadAdmin()}
+ if((v==="bahith"||v==="home")&&!AI.checked) aiProbe();
  if(entered && v!=="admin") safe(()=>API.track(v)).then(updateCounter);
 }
 addEventListener("hashchange",()=>{if(!/access_token|type=/.test(location.hash)){render();scrollTo(0,0)}});
 function ask(q){
  if(!q.trim())return; const d=$("#dom")?.value||"sira";
+ if(AI.on&&d==="sira"&&!GUARD.some(g=>g.re.test(q))){askAI(q);return}
  const a=answer(q,d); if(d==="sira"&&a.kind!=="guard"&&!a.cards) a.cards=siraMatch(q); if(a.kind==="card") a.para=bestPara(a.top[1],q); chat.push({u:q}); chat.push({a});
  safe(()=>API.logSearch(d,a.kind==="card"?"hit":a.kind,a.f?.id||(a.top?"C-"+a.top[0].id+"-"+a.top[1].n:null))); // outcome only — the question text is never stored
  const keep=d; render(); if($("#dom")) $("#dom").value=keep;
 }
+/* ---------- smart assistant (Supabase Edge Function «basira-chat»; answers only from platform sources) ---------- */
+const AI={on:false,checked:false,busy:false};
+const AI_URL=()=>CONFIG.SUPABASE_URL+"/functions/v1/basira-chat";
+const aiHeaders=()=>({"Content-Type":"application/json",apikey:CONFIG.SUPABASE_ANON_KEY,Authorization:"Bearer "+CONFIG.SUPABASE_ANON_KEY});
+async function aiProbe(){if(AI.checked||!LIVE)return;AI.checked=true;try{const r=await Promise.race([fetch(AI_URL(),{headers:aiHeaders()}),new Promise((_,j)=>setTimeout(()=>j(0),6000))]);const j=r.ok?await r.json():{};if(j.configured){AI.on=true;if(location.hash==="#bahith")render()}}catch(e){}}
+async function askAI(q){
+ if(AI.busy)return; AI.busy=true;
+ const history=[];for(let i=0;i<chat.length;i++){const c=chat[i];if(c.u&&chat[i+1]?.ai?.answer){history.push({role:"user",content:c.u},{role:"assistant",content:chat[i+1].ai.answer})}}
+ chat.push({u:q});const slot={ai:{pending:true}};chat.push(slot);render();
+ try{const r=await fetch(AI_URL(),{method:"POST",headers:aiHeaders(),body:JSON.stringify({q,history:history.slice(-6)})});const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.answer){if(j.error==="rate_limited"){slot.ai={err:"وصلت إلى الحد المسموح من الأسئلة في هذه الساعة. حاول بعد قليل، أو تصفح محطات السيرة مباشرة."}}else{if(j.error==="not_configured")AI.on=false;delete slot.ai;const a=answer(q,"sira");if(!a.cards)a.cards=siraMatch(q);if(a.kind==="card")a.para=bestPara(a.top[1],q);slot.a=a}}
+  else slot.ai={answer:j.answer,sources:j.sources||[],grounded:j.grounded};
+  safe(()=>API.logSearch("sira",slot.ai?.grounded||slot.a?.kind==="card"||slot.a?.kind==="hit"?"hit":"miss",null)); // outcome only — the question text is never stored
+ }catch(e){delete slot.ai;const a=answer(q,"sira");if(!a.cards)a.cards=siraMatch(q);if(a.kind==="card")a.para=bestPara(a.top[1],q);slot.a=a}
+ AI.busy=false;render();
+}
+function renderAI(x){
+ if(x.pending) return `<div class="msg-b ai-msg" aria-live="polite"><div class="notice"><span>المساعد الذكي</span></div><p class="ai-typing">يبحث في مصادر المنصة<span>.</span><span>.</span><span>.</span></p></div>`;
+ if(x.err) return `<div class="msg-b"><div class="limit">${esc(x.err)}</div></div>`;
+ const src=x.sources||[];const link=n=>{const s=src.find(y=>y.n===+n);return s?`<a class="cite" href="${esc(s.href)}" title="${esc(s.title)}">${n}</a>`:""};
+ const body=esc(x.answer).split(/\n\s*\n|\n/).filter(p=>p.trim()).map(p=>`<p>${p.replace(/\[(\d+)\]/g,(m,n)=>link(n))}</p>`).join("");
+ return `<div class="msg-b ai-msg">
+  <div class="notice"><span>المساعد الذكي · من مصادر المنصة</span></div>
+  <div class="ai-body">${body}</div>
+  ${src.length?`<div><h4>المصادر</h4><ol class="ai-src">${src.map(s=>`<li value="${s.n}"><a href="${esc(s.href)}">${esc(s.title)}</a></li>`).join("")}</ol></div>`:""}
+  <div class="limit" style="font-size:12.5px">صاغ المساعد هذه الإجابة آليًا من مصادر المنصة المذكورة، فارجع إليها للتوثيق. لا يُصدر فتاوى، ولا تُحفظ أسئلتك.</div>
+ </div>`}
 const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 const pickedInterests=f=>[...f.querySelectorAll('input[name="interest"]:checked')].map(x=>x.value);
 document.addEventListener("click",async e=>{
