@@ -423,6 +423,13 @@ details.help ol{margin:8px 0 0;padding-inline-start:20px;display:grid;gap:5px;fo
 #totop:hover{background:var(--gold);color:var(--navy)}
 #totop:focus-visible{outline:2px solid var(--gold-2);outline-offset:3px}
 .reader-body .rb-sub{font-size:20px;color:var(--gold-3);margin:1.2em 0 .3em;padding-inline-start:10px;border-inline-start:3px solid var(--gold)}
+.reader-body .rb-sec{font-family:var(--f-display);font-size:22px;color:var(--ink);margin:.6em 0 .1em;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.reader-body .rb-sec:first-child{margin-top:0}
+.se-link{margin:4px 0 0}.se-link a{color:var(--gold-3)}
+.stage-end{scroll-margin-top:90px}
+.stage-end .se-part{display:grid;gap:10px}
+.stage-end .se-part h3{font-size:20px;color:var(--gold-3);padding-inline-start:10px;border-inline-start:3px solid var(--gold)}
+.stage-end .se-part.src{padding:16px 18px}
 .reader-body .lesson{position:relative;padding-inline-start:44px}
 .reader-body .lesson .ln{position:absolute;inset-inline-start:0;top:.15em;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:800;color:var(--navy);background:linear-gradient(180deg,var(--gold-2),var(--gold))}
 .reader-body .lesson b{color:var(--gold-3)}
@@ -883,10 +890,24 @@ const shareUrl=r=>SHARE_PAGES.has(r)?SITE+"/s/"+r+".html":SITE+"/#"+r;
 const shareRow=(r,t)=>{const u=encodeURIComponent(shareUrl(r)),x=encodeURIComponent(t);
  return `<div class="share"><span class="ref">شارك:</span><a class="btn btn-s btn-sm" href="https://www.facebook.com/sharer/sharer.php?u=${u}" target="_blank" rel="noopener">فيسبوك</a><a class="btn btn-s btn-sm" href="https://wa.me/?text=${x}%0A${u}" target="_blank" rel="noopener">واتساب</a><a class="btn btn-s btn-sm" href="https://t.me/share/url?url=${u}&text=${x}" target="_blank" rel="noopener">تيليجرام</a><a class="btn btn-s btn-sm" href="https://x.com/intent/post?url=${u}&text=${x}" target="_blank" rel="noopener">إكس</a><button type="button" class="btn btn-s btn-sm" data-copylink="#${r}">انسخ الرابط</button></div>`};
 const siraMissing=()=>`<section class="view"><div class="stack"><h1>البطاقة غير متاحة</h1><p class="lead">ربما نُقلت أو لم تُنشر بعد.</p><div class="btns"><a class="btn btn-p" href="#oswati">العودة إلى أسوتي</a></div></div></section>`;
+const paras=t=>String(t||"").split(/\n\s*\n/).filter(x=>x.trim()).map(p=>`<p class="sira-end">${qfmt(p)}</p>`).join("");
+const refsHTML=list=>`<ul class="refs">${list.map(x=>`<li>${x.u?`<a href="${esc(safeUrl(x.u))}" target="_blank" rel="noopener">${esc(x.t)}</a>`:esc(x.t)}</li>`).join("")}</ul>`;
+/* station sources: explicit st.src, else the cards' references merged without repeats */
+const stageRefs=(st,cards)=>{if(Array.isArray(st.src)&&st.src.length)return st.src;const seen=new Set(),out=[];for(const c of cards)for(const x of (c.r||[])){const k=x.u?String(x.u).replace(/\/$/,""):norm(x.t);if(!k||seen.has(k))continue;seen.add(k);out.push(x)}return out};
+function stageEndHTML(st,cards){
+ /* stations 1–4 kept their closing text in "end" without a heading: it is the station summary */
+ const wh=st.endH&&!/^خاتمة/.test(st.endH)?st.endH:""; const sum=st.sum||(!wh?st.end:""), wahy=wh&&st.end?st.end:"", refs=stageRefs(st,cards);
+ if(!sum&&!wahy&&!refs.length) return "";
+ return `<div class="stack stage-end" id="stage-end"><h2>خاتمة المحطة</h2>
+  ${sum?`<div class="se-part"><h3>موجز المحطة</h3>${paras(sum)}</div>`:""}
+  ${wahy?`<div class="se-part"><h3>${esc(wh)}</h3>${paras(wahy)}</div>`:""}
+  ${refs.length?`<div class="se-part src"><h3>المصادر والتوثيق العلمي</h3>${refsHTML(refs)}</div>`:""}
+ </div>`}
 V.sira=arg=>{
- const m=String(arg||"").match(/^([a-z]+)(?:-(\d+))?$/); const st=m&&SIRA.find(s=>s.id===m[1]);
+ const m=String(arg||"").match(/^([a-z]+)(?:-(\d+|end))?$/); const st=m&&SIRA.find(s=>s.id===m[1]);
  const cards=st?stageCards(st):[]; if(!cards.length) return siraMissing();
- if(m[2]) return siraCardView(st,cards,+m[2]);
+ if(m[2]==="end") setTimeout(()=>document.getElementById("stage-end")?.scrollIntoView({block:"start"}),90);
+ else if(m[2]) return siraCardView(st,cards,+m[2]);
  const unrev=cards.some(c=>c.st!=="pub");
  return `<section class="view">
   <div class="stack">
@@ -900,8 +921,7 @@ V.sira=arg=>{
    ${unrev?`<p class="ref">هذه البطاقات قيد المراجعة العلمية، وتُعتمد بعد مراجعة المشرف العلمي.</p>`:""}
    <div class="grid sira-grid">${cards.map(c=>`<a class="card sira-card" href="#sira-${st.id}-${c.n}"><div class="meta"><span class="sc-n">${pad2(c.n)}</span>${c.st!=="pub"?pill(c.st):""}</div><h3>${esc(c.t)}</h3><p>${esc(c.s)}</p><span class="go">اقرأ البطاقة ←</span></a>`).join("")}</div>
   </div>
-  ${st.sum?`<div class="stack"><h2>موجز المحطة</h2>${String(st.sum).split(/\n\s*\n/).map(p=>`<p class="sira-end">${qfmt(p)}</p>`).join("")}</div>`:""}
-  ${st.end?`<div class="stack"><h2>${esc(st.endH||"خاتمة المحطة")}</h2>${String(st.end).split(/\n\s*\n/).map(p=>`<p class="sira-end">${qfmt(p)}</p>`).join("")}</div>`:""}
+  ${stageEndHTML(st,cards)}
   ${prevStage(st)||nextStage(st)?`<nav class="sira-nav" aria-label="التنقل بين المحطات">${prevStage(st)?`<a class="btn btn-s btn-sm" href="#sira-${prevStage(st).id}">→ المحطة السابقة: ${esc(prevStage(st).h||prevStage(st).t)}</a>`:"<span></span>"}${nextStage(st)?`<a class="btn btn-s btn-sm" href="#sira-${nextStage(st).id}">المحطة التالية: ${esc(nextStage(st).h||nextStage(st).t)} ←</a>`:""}</nav>`:""}
   ${shareRow("sira-"+st.id,st.h||st.t)}
   ${ME?.is_admin&&st.note?`<div class="limit"><b>ملاحظة للمراجعة (تظهر للمشرف فقط):</b> ${esc(st.note)}</div>`:""}
@@ -914,9 +934,9 @@ function siraCardView(st,cards,n){
   <div class="meta"><span class="pill intro">البطاقة ${pad2(i+1)} من ${pad2(cards.length)}</span><span class="tag">مدة القراءة: ${readMins(c)}</span>${c.st!=="pub"?pill(c.st):""}</div>
   <h1>${esc(c.t)}</h1>
   ${c.s?`<p class="lead">${esc(c.s)}</p>`:""}
-  <div class="reader-body">${(c.b||[]).map(p=>{if(/^##\s/.test(p))return `<h3 class="rb-sub">${esc(String(p).slice(3))}</h3>`;const m=String(p).match(/^(\d+)\.\s+([^:：]{2,80}):\s*(.*)$/);return m?`<p class="lesson"><span class="ln">${m[1]}</span><b>${esc(m[2])}:</b> ${qfmt(m[3])}</p>`:`<p>${qfmt(p)}</p>`}).join("")}</div>
-  ${(c.r||[]).length?`<div class="src"><div class="label">المصادر والمراجع</div><ul class="refs">${c.r.map(x=>`<li>${x.u?`<a href="${esc(safeUrl(x.u))}" target="_blank" rel="noopener">${esc(x.t)}</a>`:esc(x.t)}</li>`).join("")}</ul></div>`:""}
-  <nav class="sira-nav" aria-label="التنقل بين البطاقات">${prev?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${prev.n}">→ ${esc(prev.t)}</a>`:"<span></span>"}${next?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${next.n}">${esc(next.t)} ←</a>`:nextStage(st)?`<a class="btn btn-p btn-sm" href="#sira-${nextStage(st).id}">المحطة التالية: ${esc(nextStage(st).h||nextStage(st).t)} ←</a>`:`<a class="btn btn-s btn-sm" href="#sira-${st.id}">كل بطاقات المحطة</a>`}</nav>
+  <div class="reader-body"><h2 class="rb-sec">تفاصيل الحدث</h2>${(c.b||[]).map(p=>{if(/^##\s/.test(p))return `<h3 class="rb-sub">${esc(String(p).slice(3))}</h3>`;if(/^ومن أبرز الدروس والقيم المستفادة/.test(p)&&String(p).length<90)return `<h2 class="rb-sec">القيم المستفادة</h2>`;const m=String(p).match(/^(\d+)\.\s+([^:：]{2,80}):\s*(.*)$/);return m?`<p class="lesson"><span class="ln">${m[1]}</span><b>${esc(m[2])}:</b> ${qfmt(m[3])}</p>`:`<p>${qfmt(p)}</p>`}).join("")}</div>
+  <p class="ref se-link"><a href="#sira-${st.id}-end">المصادر والتوثيق العلمي في خاتمة المحطة ←</a></p>
+  <nav class="sira-nav" aria-label="التنقل بين البطاقات">${prev?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${prev.n}">→ ${esc(prev.t)}</a>`:"<span></span>"}${next?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${next.n}">${esc(next.t)} ←</a>`:`<a class="btn btn-p btn-sm" href="#sira-${st.id}-end">خاتمة المحطة: الموجز والمصادر ←</a>`}</nav>
   ${shareRow("sira-"+st.id+"-"+c.n,c.t)}
  </article></section>`}
 const STOP=new Set(["من","ما","ماذا","كيف","متي","لماذا","هل","عن","في","علي","الي","او","ثم","التي","الذي","كان","كانت","النبي","رسول","الرسول","الله","صلي","عليه","وسلم","محمد","قصه","حدثني","اريد","اعرف","معني","هو","هي","مع","بعد","قبل"]);
@@ -1583,7 +1603,7 @@ const siraCardRow=(c,i)=>`<details class="cms-faq" data-row="${i}" ${c._open?"op
   <label>العنوان<input data-f="t" value="${esc(c.t||"")}" maxlength="140"></label>
   <label>الملخص الظاهر في البطاقة (سطران إلى ثلاثة)<textarea data-f="s" rows="2">${esc(c.s||"")}</textarea></label>
   <label>المتن (افصلي بين الفقرات بسطر فارغ، والآيات بين ﴿ ﴾ تظهر بخط المصحف)<textarea data-f="b" rows="9">${esc((c.b||[]).join("\n\n"))}</textarea></label>
-  <label>المصادر والمراجع (مصدر في كل سطر، والرابط بعد علامة | إن وُجد)<textarea data-f="r" rows="4">${esc((c.r||[]).map(x=>x.u?x.t+" | "+x.u:x.t).join("\n"))}</textarea></label>
+  <label>مصادر البطاقة (تُجمع تلقائيًا في «المصادر والتوثيق العلمي» بخاتمة المحطة؛ مصدر في كل سطر، والرابط بعد علامة | إن وُجد)<textarea data-f="r" rows="4">${esc((c.r||[]).map(x=>x.u?x.t+" | "+x.u:x.t).join("\n"))}</textarea></label>
   <label>حالة النشر<select data-f="st">${["draft","review","pub"].map(s=>`<option value="${s}" ${s===(c.st||"draft")?"selected":""}>${STATUS_LABEL[s]}${s==="draft"?" (مخفية عن الزوار)":""}</option>`).join("")}</select></label>
   <div class="btns"><button type="button" class="btn btn-s btn-sm" data-cms="sc-del" data-i="${i}">حذف البطاقة</button></div>
  </div></details>`;
@@ -1595,8 +1615,8 @@ function siraEdHTML(){
   <label>العنوان الفرعي<input data-f="sub" value="${esc(st.sub||"")}"></label>
   <label>الفقرة التعريفية<textarea data-f="intro" rows="4">${esc(st.intro||"")}</textarea></label>
   <label>موجز المحطة (اختياري)<textarea data-f="sum" rows="3">${esc(st.sum||"")}</textarea></label>
-  <label>عنوان قسم الختام<input data-f="endH" value="${esc(st.endH||"خاتمة المحطة")}"></label>
-  <label>خاتمة المحطة<textarea data-f="end" rows="3">${esc(st.end||"")}</textarea></label>
+  <label>عنوان قسم «من وحي السيرة» (اتركه فارغًا إذا كان نص الختام موجزًا للمحطة)<input data-f="endH" value="${esc(st.endH||"")}"></label>
+  <label>من وحي السيرة<textarea data-f="end" rows="3">${esc(st.end||"")}</textarea></label>
   <label>ملاحظة للمراجعة (تظهر للمشرف فقط)<textarea data-f="note" rows="2">${esc(st.note||"")}</textarea></label>
  </div>
  <h3>البطاقات</h3>
