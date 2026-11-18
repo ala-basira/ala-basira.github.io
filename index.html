@@ -860,7 +860,7 @@ const itemCard=(it,full)=>`<article class="card">
 
 const OT={
  sira:()=>`<div class="stack">
-   <p class="ref">اضغط على المحطة التي تحمل بطاقات لتقرأها بمصادرها. بقية المحطات تُستكمل تباعًا.</p>
+   <p class="ref">عشر محطات من مولد رسول الله ﷺ إلى وفاته. اضغط على أي محطة لتقرأ بطاقاتها، وفي آخر كل محطة خاتمتها ومصادرها.</p>
    <div class="timeline">${SIRA.map(s=>{const n=stageCards(s).length;return n?`<a class="tl tl-link" href="#sira-${s.id}"><div class="yr">${esc(s.y)}</div><h3>${esc(s.t)}</h3><p style="color:var(--ink-2);font-size:14px">${esc(s.n)}</p><span class="go">${cardsWord(n)} ←</span></a>`:`<div class="tl"><div class="yr">${esc(s.y)}</div><h3>${esc(s.t)}</h3><p style="color:var(--ink-2);font-size:14px">${esc(s.n)}</p></div>`}).join("")}</div></div>`,
  mawaqif:()=>`<div class="stack"><p class="ref">خمسة مواقف تُستخرج منها عشر مهارات حياتية بعد الشرح والسياق والتحقق. لا يُشترط أن يُنتج كل موقف مهارتين.</p>
    <div class="grid">${ITEMS.filter(i=>i.type==="موقف").map(i=>itemCard(i,true)).join("")}</div></div>`,
@@ -940,7 +940,7 @@ function siraCardView(st,cards,n){
   <nav class="sira-nav" aria-label="التنقل بين البطاقات">${prev?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${prev.n}">→ ${esc(prev.t)}</a>`:"<span></span>"}${next?`<a class="btn btn-s btn-sm" href="#sira-${st.id}-${next.n}">${esc(next.t)} ←</a>`:`<a class="btn btn-p btn-sm" href="#sira-${st.id}-end">خاتمة المحطة: الموجز والمصادر ←</a>`}</nav>
   ${shareRow("sira-"+st.id+"-"+c.n,c.t)}
  </article></section>`}
-const STOP=new Set(["من","ما","ماذا","كيف","متي","لماذا","هل","عن","في","علي","الي","او","ثم","التي","الذي","كان","كانت","النبي","رسول","الرسول","الله","صلي","عليه","وسلم","محمد","قصه","حدثني","اريد","اعرف","معني","هو","هي","مع","بعد","قبل"]);
+const STOP=new Set(["من","ما","ماذا","كيف","متي","لماذا","هل","عن","في","علي","الي","او","ثم","التي","الذي","كان","كانت","النبي","رسول","الرسول","الله","صلي","عليه","وسلم","محمد","قصه","حدثني","اريد","اعرف","معني","هو","هي","مع","بعد","قبل","اين","ماهو","ماهي","اذكر","حدثنا","احكي","اخبرني"]);
 const stem=w=>{let x=w.replace(/^(وال|بال|كال|فال|لل|ال)/,"");if(x.length<3)x=w;let y=x.replace(/(ها|هم|ات|ون|ين|ه)$/,"");if(y.length>=4&&/ت$/.test(y))y=y.slice(0,-1);y=y.length>=3?y:x;return STOP.has(y)?x:y};
 const qWords=q=>norm(q).replace(/[^\u0621-\u064Aa-z0-9\s]/g," ").split(/\s+/).filter(w=>w.length>1&&!STOP.has(w)).map(stem).filter(w=>w.length>=2);
 function siraMatch(qRaw){
@@ -1690,12 +1690,11 @@ async function saveContentNow(k,d,note){await READY;await API.saveContent(k,d,no
 
 /* ===================== ROUTER & EVENTS ===================== */
 const TICKER=[
- {b:"جديد",t:"المحطة الثامنة: صلح الحديبية وفتح مكة المبين — خمس بطاقات أولى بمصادرها",h:"#sira-hudaybiya",i:"palm",g:1},
+ {b:"اكتملت",t:"السيرة النبوية في «أسوتي»: عشر محطات من المولد إلى الوفاة، بمصادرها",h:"#oswati",i:"palm",g:1},
+ {b:"جديد",t:"المحطة العاشرة: حجة الوداع ووفاة الرسول ﷺ — خمس بطاقات بمصادرها",h:"#sira-wada",i:"palm",g:1},
+ {b:"جديد",t:"المحطة التاسعة: عام الوفود وانتشار الإسلام — من حنين إلى تبوك في سبع بطاقات",h:"#sira-wufud",i:"palm",g:1},
+ {b:"جديد",t:"المحطة الثامنة: صلح الحديبية وفتح مكة المبين — سبع بطاقات بمصادرها",h:"#sira-hudaybiya",i:"palm",g:1},
  {b:"جديد",t:"المحطة السابعة: الغزوات الكبرى وحماية الدعوة — من بدر إلى الخندق في سبع بطاقات",h:"#sira-ghazawat",i:"palm",g:1},
- {b:"جديد",t:"المحطة السادسة: بناء المجتمع النبوي — ثماني بطاقات بمصادرها",h:"#sira-madina",i:"palm",g:1},
- {b:"جديد",t:"المحطة الخامسة: من بيعتي العقبة إلى الهجرة النبوية — إحدى عشرة بطاقة",h:"#sira-hijra",i:"palm",g:1},
- {b:"جديد",t:"المحطة الرابعة: الدعوة الإسلامية في مكة المكرمة — إحدى عشرة بطاقة بمصادرها",h:"#sira-makki",i:"palm",g:1},
- {b:"جديد",t:"مولد رسول الله ﷺ ونشأته: سبع بطاقات بمصادرها",h:"#sira-mawlid",i:"palm",g:1},
  {b:"أسوتي",t:"«أسوتي» متاح الآن في نسخة تجريبية",h:"#oswati",i:"steps"},
  {b:"الباحث الشرعي",t:"كل جواب يُعرض بنصه ومصدره وموضعه",h:"#bahith",i:"search"},
  {b:"أسوتي",t:"خمسة مواقف نبوية تُستخرج منها عشر مهارات حياتية",h:"#oswati",i:"steps",g:1},
